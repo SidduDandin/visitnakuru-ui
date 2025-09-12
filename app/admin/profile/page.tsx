@@ -25,7 +25,7 @@ export default function ProfilePage() {
 
     const controller = new AbortController()
 
-    fetch("http://localhost:5000/api/admin/profile", {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/profile`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
     })
@@ -69,7 +69,7 @@ export default function ProfilePage() {
     const token = localStorage.getItem("token")
     if (!token) return toast.error("Not authenticated")
 
-    const res = await fetch("http://localhost:5000/api/admin/profile", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/profile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
