@@ -1,24 +1,27 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FaLock } from "react-icons/fa"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
-
 
 export default function ChangePasswordPage() {
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [errors, setErrors] = useState<{ oldPassword?: string; newPassword?: string; confirmPassword?: string }>({})
+  const [token, setToken] = useState<string | null>(null)
+
   const router = useRouter()
 
-
- const token = localStorage.getItem("token")
-    if (!token) {
-      
+  // ✅ Run only on client
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token")
+    if (!storedToken) {
       router.push("/admin-login")
-      
+    } else {
+      setToken(storedToken)
     }
+  }, [router])
 
   const validate = () => {
     const newErrors: typeof errors = {}
@@ -32,9 +35,7 @@ export default function ChangePasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validate()) return
-
-   
+    if (!validate() || !token) return
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/change-password`, {
       method: "POST",
