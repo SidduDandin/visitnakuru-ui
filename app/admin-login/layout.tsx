@@ -28,13 +28,13 @@ export default function AdminLoginLayout({ children }: { children: ReactNode }) 
       </header>
 
         {/* Main content */}
-       <main className="flex-1 flex items-center justify-center p-6 mt-10">
+       <main className="flex-1 flex items-center justify-center h-[90vh] bg-gradient-to-br bg-gray-100 via-gray-200 to-gray-300">
         {children}
          <Toaster position="top-right" reverseOrder={false} />
       </main>
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white p-3 text-center mt-10">
+        <footer className="bg-gray-900 text-white p-3 text-center">
           © {new Date().getFullYear()} Admin Portal. All rights reserved.
         </footer>
      </>
