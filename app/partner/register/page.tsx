@@ -1,7 +1,8 @@
 "use client";  // <-- Add this
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import PartnerRegisterComponent from "@/components/frontendcomponents/partner/register";
+import PartnerRegisterComponent from "@/components/frontendcomponents/partner/register.js";
+
 
 export default function RegisterPage() {
   const queryClient = new QueryClient(); // now created on client only
