@@ -1,25 +1,34 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { Toaster } from "react-hot-toast"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
+import { Toaster } from "react-hot-toast";
+import Link from "next/link";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [username, setUsername] = useState("")
-  const router = useRouter()
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [username, setUsername] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("username")
-    if (storedUser) setUsername(storedUser)
-  }, [])
+    const storedUser = localStorage.getItem("username");
+    if (storedUser) setUsername(storedUser);
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    // localStorage.removeItem("username")
-    router.push("/admin-login")
-  }
+    localStorage.removeItem("token");
+    router.push("/admin-login");
+  };
+
+  // Helper for active link
+  const navItemClass = (href: string) =>
+    `block rounded-md px-3 py-2 ${
+      pathname === href
+        ? "bg-green-900 font-semibold"
+        : "hover:bg-green-600"
+    }`;
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -32,29 +41,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="flex items-center space-x-2 p-4">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white">
-            <Image src="/visitnakuru.jpg" alt="Logo" width={40} height={40} />
+            <Image src="/images/logo.png" alt="Logo" width={40} height={40} />
           </div>
           {sidebarOpen && <span className="font-bold text-lg">VisitNakuru</span>}
         </div>
 
-        {/* Edge-to-edge divider */}
+        {/* Divider */}
         <div className="h-px bg-white/40 w-full"></div>
 
         {/* Menu */}
         <nav className="flex-1 p-4 space-y-3 text-sm font-medium">
-          <a href="/admin/dashboard" className="block rounded-md px-3 py-2 hover:bg-green-600">
+          <Link href="/admin/dashboard" className={navItemClass("/admin/dashboard")}>
             📊 {sidebarOpen && "Dashboard"}
-          </a>
-          <a href="/admin/profile" className="block rounded-md px-3 py-2 hover:bg-green-600">
+          </Link>
+          <Link href="/admin/profile" className={navItemClass("/admin/profile")}>
             👤 {sidebarOpen && "Profile"}
-          </a>
-          <a href="/admin/change-password" className="block rounded-md px-3 py-2 hover:bg-green-600">
+          </Link>
+          <Link href="/admin/change-password" className={navItemClass("/admin/change-password")}>
             🔑 {sidebarOpen && "Change Password"}
-          </a>
+          </Link>
+          <Link href="/admin/blogs" className={navItemClass("/admin/blogs")}>
+            📝 {sidebarOpen && "Manage Blogs"}
+          </Link>
+          <Link href="/admin/partners" className={navItemClass("/admin/partners")}>
+            🤝 {sidebarOpen && "Partners"}
+          </Link>
         </nav>
       </aside>
 
-      {/* Main area */}
+      {/* Main Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white shadow flex justify-between items-center px-6 py-3">
@@ -78,11 +93,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Content */}
         <main className="flex-1 p-6">{children}</main>
         <Toaster position="top-right" reverseOrder={false} />
+
         {/* Footer */}
         <footer className="bg-gray-900 text-white text-center py-3">
           © {new Date().getFullYear()} VisitNakuru Admin. All rights reserved.
         </footer>
       </div>
     </div>
-  )
+  );
 }

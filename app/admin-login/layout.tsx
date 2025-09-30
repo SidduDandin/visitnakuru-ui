@@ -16,7 +16,7 @@ export default function AdminLoginLayout({ children }: { children: ReactNode }) 
         <div className="container mx-auto flex items-center gap-2 p-4">
           <div className="rounded-full overflow-hidden">
             <Image
-              src="/visitnakuru.jpg"   // 👈 put your real logo in /public/logo.png
+              src="/images/logo.png"   // 👈 put your real logo in /public/logo.png
               alt="Logo"
               width={40}
               height={40}

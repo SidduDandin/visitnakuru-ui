@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -41,7 +42,7 @@ export default function ForgotPasswordPage() {
     <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
       <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden shadow">
         <Image
-          src="/visitnakuru.jpg"
+          src="/images/logo.png"
           alt="Admin Logo"
           width={80}
           height={80}
@@ -81,12 +82,8 @@ export default function ForgotPasswordPage() {
       )}
 
       <div className="mt-6 text-center">
-        <a
-          href="/admin-login"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          Back to Login
-        </a>
+        
+         <Link href="/admin-login" className="text-sm text-blue-600 hover:underline">Back to Login</Link>
       </div>
     </div>
   )

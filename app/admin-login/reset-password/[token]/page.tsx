@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 
 export default function ResetPasswordPage() {
   const params = useParams()
@@ -112,9 +113,8 @@ export default function ResetPasswordPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a href="/admin-login" className="text-sm text-blue-600 hover:underline">
-            Back to Login
-          </a>
+          
+          <Link href="/admin-login" className="text-sm text-blue-600 hover:underline">Back to Login</Link>
         </div>
       </div>
     
