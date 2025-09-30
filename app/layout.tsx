@@ -2,8 +2,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Header from "@/components/Frontendcomponents/header";
-import Footer from "@/components/Frontendcomponents/footer";
+import Header from "@/components/frontendcomponents/header";
+import Footer from "@/components/frontendcomponents/footer";
 import { Outfit } from "next/font/google";
 
 import { usePathname } from 'next/navigation';
