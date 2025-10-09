@@ -1,0 +1,66 @@
+{
+  "pageTitles": {
+    "aboutUsTitle": "About Us",
+    "termsTitle": "Terms & Conditions",
+    "privacyTitle": "Privacy Policy"
+  },
+  "aboutPage": {
+    "subtitle": "Learn more about our mission, vision, and the dedicated team behind Invest in Nakuru.",
+    "loading": "Loading content in {{language}}...",
+    "getInTouch": "Get In Touch",
+    "contentNotFound": "Content not found."
+  },
+  "termsPage": {
+    "subtitle": "Please read our terms and conditions carefully.",
+    "loading": "Loading Terms and Conditions in {{language}}...",
+    "contentNotFound": "<p>We're sorry, the content for the Terms and Conditions page could not be loaded at this time. Please try again later.</p>"
+  },
+  "privacyPage": {
+    "subtitle": "Your privacy is important to us. Learn how we handle your data.",
+    "loading": "Loading Privacy Policy in {{language}}...",
+    "contentNotFound": "<p>We're sorry, the content for the Privacy Policy page could not be loaded at this time. Please try again later.</p>"
+  },
+  "header": {
+    "searchButton": "Search",
+    "searchPlaceholder": "Search..."
+  },
+  "nav": {
+    "whatsOn": "What's On",
+    "thingsToDo": "Things to Do",
+    "foodDrink": "Food & Drink",
+    "shopping": "Shopping",
+    "bookTickets": "Book Tickets",
+    "visitorInfo": "Visitor Information"
+  },
+  "mobileNav": {
+    "aboutUs": "About Us",
+    "news": "News",
+    "dataReports": "Data & Reports",
+    "events": "Events",
+    "whyNairobi": "Why Nairobi",
+    "startupSupport": "Startup Support",
+    "keySectors": "Key Sectors",
+    "diaspora": "Diaspora",
+    "contactUs": "Contact Us"
+  },
+  "desktopMegaNav": {
+    "contactUs": "Contact Us",
+    "support": "Support",
+    "about": "About",
+    "services": "Services",
+    "careers": "Careers",
+    "blog": "Blog"
+  },
+  "footer": {
+    "whatsOn": "What's On",
+    "thingsToDo": "Things to Do",
+    "foodDrink": "Food & Drink",
+    "accommodation": "Accommodation",
+    "shopping": "Shopping",
+    "visitorInfo": "Visitor Information",
+    "blog": "Blog",
+    "copyright": "© {{year}} Visit Nakuru All Rights Reserved.",
+    "termsConditions": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy"
+  }
+}

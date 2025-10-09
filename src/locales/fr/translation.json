@@ -1,0 +1,66 @@
+{
+  "pageTitles": {
+    "aboutUsTitle": "À Propos de Nous",
+    "termsTitle": "Conditions Générales",
+    "privacyTitle": "Politique de Confidentialité"
+  },
+  "aboutPage": {
+    "subtitle": "En savoir plus sur notre mission, notre vision et l'équipe dévouée derrière Invest in Nakuru.",
+    "loading": "Chargement du contenu en {{language}}...",
+    "getInTouch": "Contactez-nous",
+    "contentNotFound": "Contenu introuvable."
+  },
+  "termsPage": {
+    "subtitle": "Veuillez lire attentivement nos termes et conditions.",
+    "loading": "Chargement des Termes et Conditions en {{language}}...",
+    "contentNotFound": "<p>Nous sommes désolés, le contenu de la page des Termes et Conditions n'a pas pu être chargé pour le moment. Veuillez réessayer plus tard.</p>"
+  },
+  "privacyPage": {
+    "subtitle": "Votre vie privée est importante pour nous. Découvrez comment nous traitons vos données.",
+    "loading": "Chargement de la Politique de Confidentialité en {{language}}...",
+    "contentNotFound": "<p>Nous sommes désolés, le contenu de la page de la Politique de Confidentialité n'a pas pu être chargé pour le moment. Veuillez réessayer plus tard.</p>"
+  },
+  "header": {
+    "searchButton": "Rechercher",
+    "searchPlaceholder": "Rechercher..."
+  },
+  "nav": {
+    "whatsOn": "Quoi de neuf",
+    "thingsToDo": "Choses à faire",
+    "foodDrink": "Nourriture et Boissons",
+    "shopping": "Shopping",
+    "bookTickets": "Réserver des Billets",
+    "visitorInfo": "Informations Visiteurs"
+  },
+  "mobileNav": {
+    "aboutUs": "À Propos de Nous",
+    "news": "Actualités",
+    "dataReports": "Données et Rapports",
+    "events": "Événements",
+    "whyNairobi": "Pourquoi Nairobi",
+    "startupSupport": "Soutien aux Startups",
+    "keySectors": "Secteurs Clés",
+    "diaspora": "Diaspora",
+    "contactUs": "Nous Contacter"
+  },
+  "desktopMegaNav": {
+    "contactUs": "Nous Contacter",
+    "support": "Support",
+    "about": "À Propos",
+    "services": "Services",
+    "careers": "Carrières",
+    "blog": "Blog"
+  },
+  "footer": {
+    "whatsOn": "Quoi de neuf",
+    "thingsToDo": "Choses à faire",
+    "foodDrink": "Nourriture et Boissons",
+    "accommodation": "Hébergement",
+    "shopping": "Shopping",
+    "visitorInfo": "Informations Visiteurs",
+    "blog": "Blog",
+    "copyright": "© {{year}} Visitez Nakuru. Tous droits réservés.",
+    "termsConditions": "Termes et Conditions",
+    "privacyPolicy": "Politique de Confidentialité"
+  }
+}

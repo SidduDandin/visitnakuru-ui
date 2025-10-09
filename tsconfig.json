@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/admin/(admin-auth)/login/page.jsx", "src/components/auth/SignInForm.jsx", "src/app/admin/(admin-auth)/login/page.jsx", "src/layout/SidebarWidget.jsx", "src/layout/Backdrop.jsx", "src/layout/AppSidebar.jsx", "src/layout/AppHeader.jsx", "src/components/manage-cms/CmsManager.jsx", "src/components/category/CategoryManger.jsx", "src/components/category/AddCategoryForm.jsx", "src/components/category/ListCategories.jsx", "src/components/news/AddNewsForm.jsx", "src/components/userauth/Register.jsx", "src/components/userauth/Register.jsx", "src/components/userauth/Login.jsx", "src/app/(public-site)/layout.tsx", "src/app/(public-site)/news-events/[slug]/page.jsx", "src/components/home/newsEvents.tsx", "src/context/LanguageContext.jsx", "src/context/LanguageContext.js"],
+  "exclude": ["node_modules"]
+}

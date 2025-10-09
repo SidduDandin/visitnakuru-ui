@@ -1,0 +1,65 @@
+{
+  "pageTitles": {
+    "aboutUsTitle": "关于我们",
+    "termsTitle": "条款与条件",
+    "privacyTitle": "隐私政策 "
+  },
+  "aboutPage": {
+    "subtitle": "了解更多关于我们的使命、愿景以及 Invest in Nakuru 背后的专业团队。",
+    "loading": "正在加载 {{language}} 内容...",
+    "getInTouch": "联系我们",
+    "contentNotFound": "未找到内容。"
+  },"termsPage": {
+    "subtitle": "请仔细阅读我们的条款和条件。",
+    "loading": "正在加载条款和条件 {{language}}...",
+    "contentNotFound": "<p>很抱歉，条款和条件页面的内容当前无法加载。请稍后重试。</p>"
+  },
+  "privacyPage": {
+    "subtitle": "您的隐私对我们很重要。了解我们如何处理您的数据。",
+    "loading": "正在加载隐私政策 {{language}}...",
+    "contentNotFound": "<p>很抱歉，隐私政策页面的内容当前无法加载。请稍后重试。</p>"
+  },
+  "header": {
+    "searchButton": "搜索",
+    "searchPlaceholder": "搜索..."
+  },
+  "nav": {
+    "whatsOn": "近期活动",
+    "thingsToDo": "游玩项目",
+    "foodDrink": "餐饮",
+    "shopping": "购物",
+    "bookTickets": "预订门票",
+    "visitorInfo": "游客信息"
+  },
+  "mobileNav": {
+    "aboutUs": "关于我们",
+    "news": "新闻",
+    "dataReports": "数据与报告",
+    "events": "活动",
+    "whyNairobi": "为什么选择内罗毕",
+    "startupSupport": "创业支持",
+    "keySectors": "关键行业",
+    "diaspora": "侨民",
+    "contactUs": "联系我们"
+  },
+  "desktopMegaNav": {
+    "contactUs": "联系我们",
+    "support": "支持",
+    "about": "关于",
+    "services": "服务",
+    "careers": "招聘",
+    "blog": "博客"
+  },
+  "footer": {
+    "whatsOn": "近期活动",
+    "thingsToDo": "游玩项目",
+    "foodDrink": "餐饮",
+    "accommodation": "住宿",
+    "shopping": "购物",
+    "visitorInfo": "游客信息",
+    "blog": "博客",
+    "copyright": "© {{year}} 游览纳库鲁. 保留所有权利。",
+    "termsConditions": "条款与条件",
+    "privacyPolicy": "隐私政策"
+  }
+}

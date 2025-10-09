@@ -1,0 +1,67 @@
+{
+  "pageTitles": {
+    "aboutUsTitle": "Über Uns",
+    "termsTitle": "Allgemeine Geschäftsbedingungen ",
+    "privacyTitle": "Datenschutzerklärung"
+  },
+  
+  "aboutPage": {
+    "subtitle": "Erfahren Sie mehr über unsere Mission, Vision und das engagierte Team hinter Invest in Nakuru.",
+    "loading": "Inhalt wird in {{language}} geladen...",
+    "getInTouch": "Kontakt aufnehmen",
+    "contentNotFound": "Inhalt nicht gefunden."
+  },
+  "termsPage": {
+    "subtitle": "Bitte lesen Sie unsere Allgemeinen Geschäftsbedingungen sorgfältig durch.",
+    "loading": "Allgemeine Geschäftsbedingungen werden auf {{language}} geladen...",
+    "contentNotFound": "<p>Leider konnte der Inhalt für die Seite der Allgemeinen Geschäftsbedingungen im Moment nicht geladen werden. Bitte versuchen Sie es später erneut.</p>"
+  },
+  "privacyPage": {
+    "subtitle": "Ihre Privatsphäre ist uns wichtig. Erfahren Sie, wie wir mit Ihren Daten umgehen.",
+    "loading": "Datenschutzerklärung wird auf {{language}} geladen...",
+    "contentNotFound": "<p>Leider konnte der Inhalt für die Seite der Datenschutzerklärung im Moment nicht geladen werden. Bitte versuchen Sie es später erneut.</p>"
+  },
+  "header": {
+    "searchButton": "Suchen",
+    "searchPlaceholder": "Suchen..."
+  },
+  "nav": {
+    "whatsOn": "Was ist los",
+    "thingsToDo": "Unternehmungen",
+    "foodDrink": "Essen & Trinken",
+    "shopping": "Einkaufen",
+    "bookTickets": "Tickets buchen",
+    "visitorInfo": "Besucherinfo"
+  },
+  "mobileNav": {
+    "aboutUs": "Über Uns",
+    "news": "Nachrichten",
+    "dataReports": "Daten & Berichte",
+    "events": "Veranstaltungen",
+    "whyNairobi": "Warum Nairobi",
+    "startupSupport": "Startup-Unterstützung",
+    "keySectors": "Schlüsselsektoren",
+    "diaspora": "Diaspora",
+    "contactUs": "Kontakt"
+  },
+  "desktopMegaNav": {
+    "contactUs": "Kontakt",
+    "support": "Support",
+    "about": "Über uns",
+    "services": "Dienstleistungen",
+    "careers": "Karriere",
+    "blog": "Blog"
+  },
+  "footer": {
+    "whatsOn": "Was ist los",
+    "thingsToDo": "Unternehmungen",
+    "foodDrink": "Essen & Trinken",
+    "accommodation": "Unterkunft",
+    "shopping": "Einkaufen",
+    "visitorInfo": "Besucherinfo",
+    "blog": "Blog",
+    "copyright": "© {{year}} Besuchen Sie Nakuru. Alle Rechte vorbehalten.",
+    "termsConditions": "AGB",
+    "privacyPolicy": "Datenschutzerklärung"
+  }
+}
