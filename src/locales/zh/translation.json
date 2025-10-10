@@ -2,10 +2,11 @@
   "pageTitles": {
     "aboutUsTitle": "关于我们",
     "termsTitle": "条款与条件",
-    "privacyTitle": "隐私政策 "
+    "privacyTitle": "隐私政策 ",
+     "contactUs": "联系我们"
   },
   "aboutPage": {
-    "subtitle": "了解更多关于我们的使命、愿景以及 Invest in Nakuru 背后的专业团队。",
+    "subtitle": "了解更多关于我们的使命、愿景以及 参观纳库鲁 背后的敬业团队。",
     "loading": "正在加载 {{language}} 内容...",
     "getInTouch": "联系我们",
     "contentNotFound": "未找到内容。"
@@ -18,6 +19,46 @@
     "subtitle": "您的隐私对我们很重要。了解我们如何处理您的数据。",
     "loading": "正在加载隐私政策 {{language}}...",
     "contentNotFound": "<p>很抱歉，隐私政策页面的内容当前无法加载。请稍后重试。</p>"
+  },
+  "contactPage": {
+    "introText": "我们随时为您提供帮助。欢迎联系我们，咨询问题或开始规划您的纳库鲁之旅。",
+    "successMessage": "消息发送成功！",
+    "failureMessage": "消息发送失败。",
+    "serverError": "服务器错误。请重试。",
+    "form": {
+      "fullName": "全名",
+      "fullNamePlaceholder": "张三",
+      "email": "电子邮件地址",
+      "emailPlaceholder": "您@示例.com",
+      "phone": "电话号码",
+      "phonePlaceholder": "0712000000",
+      "subject": "主题",
+      "subjectPlaceholder": "参观咨询",
+      "message": "消息",
+      "messagePlaceholder": "告诉我们更多您的需求...",
+      "submit": "提交消息",
+      "sending": "正在发送...",
+      "validation": {
+        "nameRequired": "请输入全名。",
+        "emailRequired": "请输入电子邮件地址。",
+        "emailInvalid": "电子邮件地址无效",
+        "phoneRequired": "请输入电话号码",
+        "phoneInvalid": "电话号码必须是精确的 10 位数字",
+        "subjectRequired": "请输入主题。",
+        "messageRequired": "请输入消息。"
+      }
+    }
+  },
+  "newsletter": {
+    "title": "保持更新",
+    "description": "订阅我们的新闻通讯，获取纳库鲁县最新的旅游资讯、景点推荐和即将举行的活动。",
+    "placeholder": "输入您的电子邮件地址",
+    "subscribing": "正在订阅...",
+    "subscribe": "订阅",
+    "successMessage": "订阅成功!",
+    "alreadySubscribed": "此电子邮件已订阅新闻通讯。",
+    "failureMessage": "订阅失败。",
+    "serverError": "服务器错误。请重试。"
   },
   "header": {
     "searchButton": "搜索",

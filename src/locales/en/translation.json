@@ -2,10 +2,11 @@
   "pageTitles": {
     "aboutUsTitle": "About Us",
     "termsTitle": "Terms & Conditions",
-    "privacyTitle": "Privacy Policy"
+    "privacyTitle": "Privacy Policy",
+    "contactUs": "Contact Us"
   },
   "aboutPage": {
-    "subtitle": "Learn more about our mission, vision, and the dedicated team behind Invest in Nakuru.",
+    "subtitle": "Learn more about our mission, vision, and the dedicated team behind Visit Nakuru.",
     "loading": "Loading content in {{language}}...",
     "getInTouch": "Get In Touch",
     "contentNotFound": "Content not found."
@@ -19,6 +20,46 @@
     "subtitle": "Your privacy is important to us. Learn how we handle your data.",
     "loading": "Loading Privacy Policy in {{language}}...",
     "contentNotFound": "<p>We're sorry, the content for the Privacy Policy page could not be loaded at this time. Please try again later.</p>"
+  },
+  "contactPage": {
+    "introText": "We're here to help. Reach out to us with your questions or to start planning your visit to Nakuru.",
+    "successMessage": "Message sent successfully!",
+    "failureMessage": "Failed to send message.",
+    "serverError": "Server error. Please try again.",
+    "form": {
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "John Doe",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "phone": "Phone Number",
+      "phonePlaceholder": "0712000000",
+      "subject": "Subject",
+      "subjectPlaceholder": "Visit Inquiry",
+      "message": "Message",
+      "messagePlaceholder": "Tell us more about your needs...",
+      "submit": "Submit Message",
+      "sending": "Sending...",
+      "validation": {
+        "nameRequired": "Please enter full name.",
+        "emailRequired": "Please enter email address.",
+        "emailInvalid": "Invalid email address",
+        "phoneRequired": "Please enter phone number",
+        "phoneInvalid": "Phone number must be exactly 10 digits",
+        "subjectRequired": "Please enter subject.",
+        "messageRequired": "Please enter message."
+      }
+    }
+  },
+"newsletter": {
+    "title": "Stay Updated",
+    "description": "Subscribe to our newsletter for the latest travel news, attractions, and upcoming events in Nakuru County.",
+    "placeholder": "Enter your email address",
+    "subscribing": "Subscribing...",
+    "subscribe": "Subscribe",
+    "successMessage": "Subscribed successfully!",
+    "alreadySubscribed": "This email is already subscribed to the newsletter.",
+    "failureMessage": "Failed to subscribe.",
+    "serverError": "Server error. Please try again."
   },
   "header": {
     "searchButton": "Search",

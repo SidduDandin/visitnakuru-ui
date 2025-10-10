@@ -2,11 +2,12 @@
   "pageTitles": {
     "aboutUsTitle": "Über Uns",
     "termsTitle": "Allgemeine Geschäftsbedingungen ",
-    "privacyTitle": "Datenschutzerklärung"
+    "privacyTitle": "Datenschutzerklärung",
+    "contactUs": "Kontakt"
   },
   
   "aboutPage": {
-    "subtitle": "Erfahren Sie mehr über unsere Mission, Vision und das engagierte Team hinter Invest in Nakuru.",
+    "subtitle": "Erfahren Sie mehr über unsere Mission, Vision und das engagierte Team hinter Visit Nakuru.",
     "loading": "Inhalt wird in {{language}} geladen...",
     "getInTouch": "Kontakt aufnehmen",
     "contentNotFound": "Inhalt nicht gefunden."
@@ -20,6 +21,46 @@
     "subtitle": "Ihre Privatsphäre ist uns wichtig. Erfahren Sie, wie wir mit Ihren Daten umgehen.",
     "loading": "Datenschutzerklärung wird auf {{language}} geladen...",
     "contentNotFound": "<p>Leider konnte der Inhalt für die Seite der Datenschutzerklärung im Moment nicht geladen werden. Bitte versuchen Sie es später erneut.</p>"
+  },
+  "contactPage": {
+    "introText": "Wir sind für Sie da. Kontaktieren Sie uns mit Ihren Fragen oder um Ihre Reise nach Nakuru zu planen.",
+    "successMessage": "Nachricht erfolgreich gesendet!",
+    "failureMessage": "Nachricht konnte nicht gesendet werden.",
+    "serverError": "Serverfehler. Bitte versuchen Sie es erneut.",
+    "form": {
+      "fullName": "Vollständiger Name",
+      "fullNamePlaceholder": "Max Mustermann",
+      "email": "E-Mail-Adresse",
+      "emailPlaceholder": "sie@beispiel.com",
+      "phone": "Telefonnummer",
+      "phonePlaceholder": "0712000000",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Besuchsanfrage",
+      "message": "Nachricht",
+      "messagePlaceholder": "Erzählen Sie uns mehr über Ihre Bedürfnisse...",
+      "submit": "Nachricht senden",
+      "sending": "Wird gesendet...",
+      "validation": {
+        "nameRequired": "Bitte geben Sie den vollständigen Namen ein.",
+        "emailRequired": "Bitte geben Sie die E-Mail-Adresse ein.",
+        "emailInvalid": "Ungültige E-Mail-Adresse",
+        "phoneRequired": "Bitte geben Sie die Telefonnummer ein.",
+        "phoneInvalid": "Die Telefonnummer muss genau 10 Ziffern enthalten",
+        "subjectRequired": "Bitte geben Sie den Betreff ein.",
+        "messageRequired": "Bitte geben Sie eine Nachricht ein."
+      }
+    }
+  },
+ "newsletter": {
+    "title": "Bleiben Sie informiert",
+    "description": "Abonnieren Sie unseren Newsletter, um die neuesten Reisetipps, Sehenswürdigkeiten und Veranstaltungen im Landkreis Nakuru zu erhalten.",
+    "placeholder": "Geben Sie Ihre E-Mail-Adresse ein",
+    "subscribing": "Abonniere...",
+    "subscribe": "Abonnieren",
+    "successMessage": "Erfolgreich abonniert!",
+    "alreadySubscribed": "Diese E-Mail ist bereits für den Newsletter angemeldet.",
+    "failureMessage": "Fehler beim Abonnieren.",
+    "serverError": "Serverfehler. Bitte versuchen Sie es erneut."
   },
   "header": {
     "searchButton": "Suchen",

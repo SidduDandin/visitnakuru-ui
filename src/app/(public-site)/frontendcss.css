@@ -344,3 +344,71 @@
       height: 25px;
     }
 }
+
+
+
+/* new css about and contact */
+
+.input-field {
+    @apply w-full p-3.5 border-2 border-border rounded-md transition-all duration-200 ease-in-out bg-white text-black placeholder-gray-400 text-base;
+}
+
+.input-field:focus {
+    @apply border-primary ring-2 ring-primary/20 outline-none;
+}
+
+.form-label {
+    @apply block font-bold mb-2 text-left text-gray-800;
+}
+
+.contact-form .form-group {
+    @apply m-0; /* Resets margin to rely on grid gap */
+}
+
+/* Styles for newsletter input on dark background */
+.bg-secondary .input-field {
+    @apply bg-white/10 border-white/20 text-white placeholder-white/70;
+}
+
+.bg-secondary .input-field:focus {
+    @apply border-white ring-2 ring-white/30;
+}
+
+@layer components {
+  .description {
+    @apply text-justify;
+  }
+
+
+}
+
+/* .description{
+     @apply text-justify;
+} */
+
+
+.description ul,
+.description ol {
+    @apply list-disc list-inside mb-4 ml-5;
+}
+
+/* table */
+.description table {
+  @apply w-full border-collapse border border-gray-300 my-6 text-left text-base;
+}
+
+.description thead {
+  @apply bg-gray-100;
+}
+
+.description th {
+  @apply border border-gray-300 px-4 py-2 font-bold;
+}
+
+.description td {
+  @apply border border-gray-300 px-4 py-2;
+}
+
+.description tr:nth-child(even) {
+  @apply bg-gray-50;
+}

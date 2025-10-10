@@ -77,7 +77,7 @@ export default function Header() {
           {/* ======== Language Switcher ======== */}
           <Menu as="div" className="relative inline-block text-left">
             <div>
-              <MenuButton className="inline-flex justify-center items-center w-full rounded-md border border-gray-300 shadow-sm md:px-3 px-2 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+              <MenuButton className="inline-flex w-full justify-center items-center gap-x-1.5 rounded-md md:px-2 px-1 py-2 text-dark-gray focus:outline-none">
                 {isMounted ? (
                   <>
                     <span className="hidden md:inline">
@@ -115,7 +115,7 @@ export default function Header() {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <MenuItems className="origin-top-right absolute right-0 mt-2 md:w-56 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <MenuItems className="absolute right-0 z-50 mt-2 md:w-56 w-40 origin-top-right bg-white border border-border focus:outline-none">
                 <div className="py-1 max-h-40 overflow-auto">
                   {supportedLangs.map((l) => (
                     <MenuItem key={l.code}>
@@ -211,7 +211,7 @@ export default function Header() {
       >
         <div className="flex items-center h-full justify-center">
           <ul className="flex flex-col max-h-full overflow-auto gap-6 font-bold text-lg text-center w-full">
-            <li><Link href="#">{t("mobileNav.aboutUs")}</Link></li>
+            <li><Link href="/about-us">{t("mobileNav.aboutUs")}</Link></li>
             <li><Link href="#">{t("mobileNav.news")}</Link></li>
             <li><Link href="#">{t("mobileNav.dataReports")}</Link></li>
             <li><Link href="#">{t("mobileNav.events")}</Link></li>
@@ -219,7 +219,7 @@ export default function Header() {
             <li><Link href="#">{t("mobileNav.startupSupport")}</Link></li>
             <li><Link href="#">{t("mobileNav.keySectors")}</Link></li>
             <li><Link href="#">{t("mobileNav.diaspora")}</Link></li>
-            <li><Link href="#">{t("mobileNav.contactUs")}</Link></li>
+            <li><Link href="/contact-us">{t("mobileNav.contactUs")}</Link></li>
           </ul>
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function Header() {
       >
         <div className="p-6">
           <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
-            <li><Link href="#">{t("desktopMegaNav.contactUs")}</Link></li>
+            <li><Link href="/contact-us">{t("desktopMegaNav.contactUs")}</Link></li>
             <li><Link href="#">{t("desktopMegaNav.support")}</Link></li>
             <li><Link href="/about-us">{t("desktopMegaNav.about")}</Link></li>
             <li><Link href="#">{t("desktopMegaNav.services")}</Link></li>

@@ -2,10 +2,11 @@
   "pageTitles": {
     "aboutUsTitle": "Sobre Nosotros",
     "termsTitle": "Términos y Condiciones",
-    "privacyTitle": "Política de Privacidad"
+    "privacyTitle": "Política de Privacidad",
+    "contactUs": "Contáctenos"
   },
   "aboutPage": {
-    "subtitle": "Obtenga más información sobre nuestra misión, visión y el equipo dedicado detrás de Invest in Nakuru.",
+    "subtitle": "Conoce más sobre nuestra misión, visión y el equipo dedicado detrás de Visit Nakuru.",
     "loading": "Cargando contenido en {{language}}...",
     "getInTouch": "Ponerse en Contacto",
     "contentNotFound": "Contenido no encontrado."
@@ -19,6 +20,46 @@
     "subtitle": "Su privacidad es importante para nosotros. Descubra cómo manejamos sus datos.",
     "loading": "Cargando Política de Privacidad en {{language}}...",
     "contentNotFound": "<p>Lo sentimos, el contenido de la página de Política de Privacidad no se pudo cargar en este momento. Por favor, inténtelo de nuevo más tarde.</p>"
+  },
+  "contactPage": {
+    "introText": "Estamos aquí para ayudarte. Contáctanos con tus preguntas o para comenzar a planificar tu visita a Nakuru.",
+    "successMessage": "¡Mensaje enviado con éxito!",
+    "failureMessage": "No se pudo enviar el mensaje.",
+    "serverError": "Error del servidor. Por favor, inténtelo de nuevo.",
+    "form": {
+      "fullName": "Nombre Completo",
+      "fullNamePlaceholder": "Juan Pérez",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "usted@ejemplo.com",
+      "phone": "Número de Teléfono",
+      "phonePlaceholder": "0712000000",
+      "subject": "Asunto",
+      "subjectPlaceholder": "Consulta de visita",
+      "message": "Mensaje",
+      "messagePlaceholder": "Cuéntenos más sobre sus necesidades...",
+      "submit": "Enviar Mensaje",
+      "sending": "Enviando...",
+      "validation": {
+        "nameRequired": "Por favor ingrese el nombre completo.",
+        "emailRequired": "Por favor ingrese el correo electrónico.",
+        "emailInvalid": "Dirección de correo electrónico no válida",
+        "phoneRequired": "Por favor ingrese el número de teléfono",
+        "phoneInvalid": "El número de teléfono debe tener exactamente 10 dígitos",
+        "subjectRequired": "Por favor ingrese el asunto.",
+        "messageRequired": "Por favor ingrese un mensaje."
+      }
+    }
+  },
+  "newsletter": {
+    "title": "Mantente al día",
+    "description": "Suscríbete a nuestro boletín para recibir las últimas noticias de viajes, atracciones y próximos eventos en el condado de Nakuru.",
+    "placeholder": "Introduzca su dirección de correo electrónico",
+    "subscribing": "Suscribiendo...",
+    "subscribe": "Suscribirse",
+    "successMessage": "¡Suscripción exitosa!",
+    "alreadySubscribed": "Este correo electrónico ya está suscrito al boletín.",
+    "failureMessage": "Error al suscribirse.",
+    "serverError": "Error del servidor. Por favor, inténtelo de nuevo."
   },
   "header": {
     "searchButton": "Buscar",
