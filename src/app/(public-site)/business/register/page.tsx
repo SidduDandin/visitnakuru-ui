@@ -18,7 +18,7 @@ export default function RegisterPage() {
         </div>
       </section> */}
     <QueryClientProvider client={queryClient}>
-      <PartnerRegisterComponent apiUrl={`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/partner`}/>
+      <PartnerRegisterComponent apiUrl={`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/partners`}/>
     </QueryClientProvider>
     </>
   );

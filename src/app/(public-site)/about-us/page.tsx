@@ -126,7 +126,7 @@ export default function AboutPage() {
 
               {/* Static Button - Translated */}
               <div className="clear-both mt-6">
-                <Link href="#" className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-lg px-6 py-3 transition duration-150">
+                <Link href="#" className="btn btn-primary -600 text-white px-6 py-3 transition duration-150">
                   {t('aboutPage.getInTouch')}
                 </Link>
               </div>

@@ -25,6 +25,7 @@ export default function PartnerOnboarding({ apiUrl }) {
 
   const [serverError, setServerError] = useState(null);
   const [isSuccessPage, setIsSuccessPage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -217,34 +218,65 @@ export default function PartnerOnboarding({ apiUrl }) {
      Submit mutation
   ------------------------- */
   const mutation = useMutation({
-    mutationFn: async (formValues) => {
-      setServerError(null);
-      const formData = new FormData();
+  mutationFn: async (data) => {
+    const apiUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/partners` ;
 
-      // append text fields
-      Object.entries(formValues).forEach(([k, v]) => {
-        if (v !== undefined && v !== null && v !== "") formData.append(k, v);
-      });
+    const formData = new FormData();
 
-      // append documents (prefix with key)
-      Object.entries(documents).forEach(([docKey, file]) => {
-        if (file) formData.append("documents", file, `${docKey}_${file.name}`);
-      });
+    // 🟢 Map frontend -> backend field names
+    formData.append("BusinessName", data.businessName);
+    formData.append("ContactPerson", data.contactPerson);
+    formData.append("Email", data.email);
+    formData.append("Phone", data.phone);
+    formData.append("Category", data.category);
+    formData.append("Subcategory", data.subcategory);
+    formData.append("PhysicalAddress", data.physicalAddress);
+    formData.append("MapLink", data.mapLink);
+    formData.append("ShortDescription", data.shortDescription);
+    formData.append("OperatingHours", data.operatingHours);
+    formData.append("FullDescription", data.fullDescription);
 
-      // append media
-      media.photos.forEach((f) => formData.append("media", f));
-      if (media.video) formData.append("media", media.video);
+   // 🟢 Append documents (object form)
+if (documents && typeof documents === "object") {
+  const seenDocs = new Set();
+  for (const [key, file] of Object.entries(documents)) {
+    if (file instanceof File && !seenDocs.has(file.name)) {
+      formData.append("documents", file);
+      seenDocs.add(file.name);
+    }
+  }
+}
 
-      const res = await fetch(apiUrl, { method: "POST", body: formData });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => null);
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
-      return res.json();
-    },
-    onSuccess: () => setIsSuccessPage(true),
-    onError: (err) => setServerError(err?.message || "Submission failed"),
+// 🟢 Append photos (avoid duplicates)
+if (Array.isArray(media?.photos)) {
+  const seenPhotos = new Set();
+  media.photos.forEach((file) => {
+    if (file instanceof File && !seenPhotos.has(file.name)) {
+      formData.append("photos", file);
+      seenPhotos.add(file.name);
+    }
   });
+}
+
+// 🟢 Append single video
+if (media?.video instanceof File) {
+  formData.append("videos", media.video);
+}
+
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => null);
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+  onSuccess: () => setIsSuccessPage(true),
+  onError: (err) => setServerError(err?.message || "Submission failed"),
+});
 
   /* -------------------------
      Navigation & validation
@@ -323,7 +355,7 @@ export default function PartnerOnboarding({ apiUrl }) {
       <div className="bg-gray-100 min-h-screen flex items-center justify-center">
         <div className="p-8 bg-white rounded-lg shadow-lg text-center">
           <h1 className="text-2xl font-bold text-green-600">🎉 Registration Successful!</h1>
-          <p className="mt-4 text-gray-700">Your partner application has been submitted. We will review it shortly.</p>
+          <p className="mt-4 text-gray-700">Your business application has been submitted. We will review it shortly.</p>
         </div>
       </div>
     );
@@ -345,7 +377,7 @@ export default function PartnerOnboarding({ apiUrl }) {
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header (kept exactly as requested) */}
         <div className="bg-primary text-white text-center py-6">
-          <h1 className="h3 font-bold">Partner Onboarding</h1>
+          <h1 className="h3 font-bold">Business Onboarding</h1>
           <p className="text-white text-sm mt-1">Step {step} of {totalSteps}</p>
           <div className="w-3/4 h-2 bg-border rounded-full mx-auto mt-2">
             <div style={{ width: progressWidth }} className="h-full bg-white transition-all duration-300" />
@@ -600,8 +632,12 @@ export default function PartnerOnboarding({ apiUrl }) {
                   Next
                 </button>
               ) : (
-                <button type="submit" className="btn btn-primary ml-auto">
-                  Submit
+                 <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`btn btn-primary ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
               )}
             </div>

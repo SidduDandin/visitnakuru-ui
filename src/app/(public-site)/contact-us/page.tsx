@@ -335,7 +335,7 @@ const onSubmitNewsletter: SubmitHandler<NewsletterFormInputs> = async (
               <div className="text-center md:col-span-2 mt-4">
                 <button
                   type="submit"
-                  className="btn px-12 py-4 text-lg"
+                  className="btn btn-primary px-12 py-4 text-lg"
                   disabled={contactLoading}
                 >
                   {contactLoading ? (t("contactPage.form.sending") || "Sending...") : (t("contactPage.form.submit") || "Submit Message")}
@@ -374,7 +374,7 @@ const onSubmitNewsletter: SubmitHandler<NewsletterFormInputs> = async (
               />
               <button
                 type="submit"
-                className="btn px-8"
+                className="btn btn-primary px-8"
                 disabled={newsletterLoading}
               >
                 {newsletterLoading ? (t("newsletter.subscribing") || "Subscribing...") : (t("newsletter.subscribe") || "Subscribe")}
