@@ -83,7 +83,8 @@ export default function SignInForm() {
         });
 
         // Redirect to the admin dashboard upon a successful admin login.
-        router.push("/admin");
+        // router.push("/admin");
+        window.location.href = "/admin";
 
       } else {
         const data = await response.json();

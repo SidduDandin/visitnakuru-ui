@@ -31,9 +31,9 @@ export default function AdminAuthLayout({
              <div className="flex items-center max-w-xs">
             <Link href="/admin" className="block mr-3">
               <Image
-                width={40}
-                height={40}
-                src="/images/logo/logo.png"
+                width={128}
+                height={70}
+                src="/images/logo/logoadmin.png"
                 alt="Logo"
                 className="object-contain"
               />
