@@ -3,7 +3,7 @@ import ForgotPasswordPage from "../../../../components/auth/forgotpassword";
 
 
 export const metadata = {
-  title: " Forgot password | Invest In Nakauru",
+  title: " Forgot password | Visit Nakauru",
   description: "Forgot password",
 };
 
