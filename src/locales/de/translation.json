@@ -1,7 +1,7 @@
 {
   "pageTitles": {
     "aboutUsTitle": "Über Uns",
-    "termsTitle": "Allgemeine Geschäftsbedingungen ",
+    "termsTitle": "Geschäftsbedingungen",
     "privacyTitle": "Datenschutzerklärung",
     "contactUs": "Kontakt"
   },
@@ -9,7 +9,7 @@
   "aboutPage": {
     "subtitle": "Erfahren Sie mehr über unsere Mission, Vision und das engagierte Team hinter Visit Nakuru.",
     "loading": "Inhalt wird in {{language}} geladen...",
-    "getInTouch": "Kontakt aufnehmen",
+    "getInTouch": "Nehmen Sie Kontakt auf",
     "contentNotFound": "Inhalt nicht gefunden."
   },
   "termsPage": {
@@ -30,12 +30,12 @@
     "form": {
       "fullName": "Vollständiger Name",
       "fullNamePlaceholder": "Max Mustermann",
-      "email": "E-Mail-Adresse",
+      "email": "E-Mail Adresse",
       "emailPlaceholder": "sie@beispiel.com",
       "phone": "Telefonnummer",
       "phonePlaceholder": "0712000000",
-      "subject": "Betreff",
-      "subjectPlaceholder": "Besuchsanfrage",
+      "subject": "Thema",
+      "subjectPlaceholder": "Besuchen Sie Anfrage",
       "message": "Nachricht",
       "messagePlaceholder": "Erzählen Sie uns mehr über Ihre Bedürfnisse...",
       "submit": "Nachricht senden",

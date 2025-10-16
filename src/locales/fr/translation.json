@@ -1,14 +1,14 @@
 {
   "pageTitles": {
     "aboutUsTitle": "À Propos de Nous",
-    "termsTitle": "Conditions Générales",
+    "termsTitle": "Termes et conditions",
     "privacyTitle": "Politique de Confidentialité",
     "contactUs": "Nous Contacter"
   },
   "aboutPage": {
-    "subtitle": "Découvrez notre mission, notre vision et l’équipe dévouée derrière Visit Nakuru.",
+    "subtitle": "Apprenez-en davantage sur notre mission, notre vision et l'équipe dévouée derrière Visitez Nakuru.",
     "loading": "Chargement du contenu en {{language}}...",
-    "getInTouch": "Contactez-nous",
+    "getInTouch": "Entrer en contact",
     "contentNotFound": "Contenu introuvable."
   },
   "termsPage": {
@@ -20,7 +20,8 @@
     "subtitle": "Votre vie privée est importante pour nous. Découvrez comment nous traitons vos données.",
     "loading": "Chargement de la Politique de Confidentialité en {{language}}...",
     "contentNotFound": "<p>Nous sommes désolés, le contenu de la page de la Politique de Confidentialité n'a pas pu être chargé pour le moment. Veuillez réessayer plus tard.</p>"
-  },"contactPage": {
+  },
+  "contactPage": {
     "introText": "Nous sommes là pour vous aider. Contactez-nous pour toute question ou pour commencer à planifier votre visite à Nakuru.",
     "successMessage": "Message envoyé avec succès !",
     "failureMessage": "Échec de l'envoi du message.",
@@ -28,7 +29,7 @@
     "form": {
       "fullName": "Nom Complet",
       "fullNamePlaceholder": "Jean Dupont",
-      "email": "Adresse E-mail",
+      "email": "Adresse email",
       "emailPlaceholder": "vous@exemple.com",
       "phone": "Numéro de Téléphone",
       "phonePlaceholder": "0712000000",

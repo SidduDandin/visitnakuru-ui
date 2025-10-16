@@ -1,5 +1,4 @@
 "use client";
-
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -9,49 +8,41 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setCookie } from "nookies";
-
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
   const [error, setError] = useState(null);
   const router = useRouter();
-
+  const [isLoading, setIsLoading] = useState(false);//new
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setEmailError("");
     setPasswordError("");
-
     let isValid = true;
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       setEmailError("Please enter a valid email address.");
       isValid = false;
     }
-
     if (!password) {
       setPasswordError("Please enter your password.");
       isValid = false;
     }
-
     if (!isValid) {
       return;
     }
-
+    setIsLoading(true);//new
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
       if (!backendUrl) {
         setError("Backend URL is not configured. Please check your .env.local file.");
         return;
       }
-
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: "POST",
         headers: {
@@ -59,11 +50,9 @@ export default function SignInForm() {
         },
         body: JSON.stringify({ email, password }),
       });
-
       if (response.ok) {
         const data = await response.json();
         const token = data.token;
-        
         // This form is exclusively for admins, so we set the isAdmin cookie to true.
         setCookie(null, "authToken", token, {
           maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
@@ -72,8 +61,7 @@ export default function SignInForm() {
           secure: process.env.NODE_ENV === "production",
           sameSite: "Lax",
         });
-
-        // ⭐ NEW: Set the 'isAdmin' cookie to 'true' to satisfy the middleware's check.
+        // :star: NEW: Set the 'isAdmin' cookie to 'true' to satisfy the middleware's check.
         setCookie(null, "isAdmin", "true", {
           maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
           path: "/",
@@ -81,21 +69,19 @@ export default function SignInForm() {
           secure: process.env.NODE_ENV === "production",
           sameSite: "Lax",
         });
-
         // Redirect to the admin dashboard upon a successful admin login.
-        // router.push("/admin");
-        window.location.href = "/admin";
-
+        router.push("/admin");
       } else {
         const data = await response.json();
         setError(data.msg || "Login failed. Please check your credentials.");
+        setIsLoading(false);//new
       }
     } catch (err) {
       console.error("Frontend login error:", err);
       setError("An unexpected error occurred. Please try again.");
+      setIsLoading(false);//new
     }
   };
-
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -172,10 +158,9 @@ export default function SignInForm() {
                     Forgot password?
                   </Link>
                 </div>
-
                 <div>
-                  <Button type="submit" className="w-full" size="sm">
-                    Login
+                  <Button type="submit" className="w-full brand-bg-color" size="sm" disabled={isLoading}>
+                    {/* Login */}{isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </div>
               </div>

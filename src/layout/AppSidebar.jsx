@@ -41,6 +41,12 @@ const navItems = [
   //   name: "Manage Success Stories",
   //   path: "/admin/testimonials",
   // },
+ {
+    icon:  <BoxCubeIcon />,
+    name: "Manage Blogs",
+    path: "/admin/blogs",
+  },
+
   {
     name: "Contacts Received",
     icon: <UserCircleIcon />,
@@ -61,11 +67,11 @@ const navItems = [
     name: "Newsletter Subscibers",
     path: "/admin/newsletter-subscribers",
   },
-  {
-    icon:  <SettingIcon />,
-    name: "Settings",
-    path: "/admin/settings",
-  },
+  // {
+  //   icon:  <SettingIcon />,
+  //   name: "Settings",
+  //   path: "/admin/settings",
+  // },
 
 
 

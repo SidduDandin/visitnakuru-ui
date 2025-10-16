@@ -2,7 +2,7 @@ import React from "react";
 import BannerManager from "@/components/banner/BannerManager";
 
 export const metadata = {
-  title: "Manage Banner | Invest In Nakuru",
+  title: "Manage Banner | Visit Nakuru",
   description: "Admin can create, edit, and manage banner.",
 };
 

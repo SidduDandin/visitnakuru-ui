@@ -2,7 +2,7 @@ import React from "react";
 import CmsManager from "@/components/cms/CmsManager";
 
 export const metadata = {
-  title: "CMS Manager | Invest In Nakuru",
+  title: "CMS Manager | Visit Nakuru",
   description: "Admin can manage CMS pages",
 };
 

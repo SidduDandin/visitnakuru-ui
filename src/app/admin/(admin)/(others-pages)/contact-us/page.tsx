@@ -1,7 +1,7 @@
 import ContactList from "@/components/contact/ContactList";
 
 export const metadata = {
-  title: "Contacts Received | Invest In Nakuru",
+  title: "Contacts Received | Visit Nakuru",
   description: "Admin contact us messages",
 };
 

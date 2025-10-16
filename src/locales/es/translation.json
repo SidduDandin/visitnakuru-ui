@@ -22,18 +22,18 @@
     "contentNotFound": "<p>Lo sentimos, el contenido de la página de Política de Privacidad no se pudo cargar en este momento. Por favor, inténtelo de nuevo más tarde.</p>"
   },
   "contactPage": {
-    "introText": "Estamos aquí para ayudarte. Contáctanos con tus preguntas o para comenzar a planificar tu visita a Nakuru.",
+    "introText": "Estamos aquí para ayudarte. Contáctanos si tienes alguna pregunta o para empezar a planificar tu visita a Nakuru.",
     "successMessage": "¡Mensaje enviado con éxito!",
     "failureMessage": "No se pudo enviar el mensaje.",
     "serverError": "Error del servidor. Por favor, inténtelo de nuevo.",
     "form": {
       "fullName": "Nombre Completo",
       "fullNamePlaceholder": "Juan Pérez",
-      "email": "Correo Electrónico",
+      "email": "Dirección de correo electrónico",
       "emailPlaceholder": "usted@ejemplo.com",
       "phone": "Número de Teléfono",
       "phonePlaceholder": "0712000000",
-      "subject": "Asunto",
+      "subject": "Sujeta",
       "subjectPlaceholder": "Consulta de visita",
       "message": "Mensaje",
       "messagePlaceholder": "Cuéntenos más sobre sus necesidades...",

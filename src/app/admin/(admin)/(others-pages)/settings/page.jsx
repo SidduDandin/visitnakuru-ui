@@ -4,7 +4,7 @@ import AdminAccountinfo from"@/components/user-profile/admin-accountinfo";
 import React  from "react";
 
 export const metadata = {
-  title: "Settings | Invest In Nakauru",
+  title: "Settings | Visit Nakauru",
   description: "Settings",
 };
 

@@ -1,7 +1,7 @@
 import NewsletterList from "@/components/newslettersubscriber/newsletter";
 
 export const metadata = {
-  title: "Newsletter Subscribers | Invest In Nakuru",
+  title: "Newsletter Subscribers | Visit Nakuru",
   description: "Admin newsletter subscribers",
 };
 

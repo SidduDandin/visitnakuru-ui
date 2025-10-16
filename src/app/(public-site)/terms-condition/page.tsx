@@ -50,7 +50,7 @@ export default function TermsPage() {
       
       try {
         // Fetch content for 'terms' page
-        const data = await getCmsContent("TermsandConditions", lang);
+        const data = await getCmsContent("TermsAndConditions", lang);
         setCmsEntry(data);
       } catch {
         // Set a localized fallback message on API failure
