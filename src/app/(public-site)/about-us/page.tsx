@@ -55,7 +55,6 @@ export default function AboutPage() {
     }
  
     async function fetchData() {
-      // Show loading state while fetching or switching language
       setCmsEntry(null);
      
       try {
