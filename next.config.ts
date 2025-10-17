@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "investinnakuru.onrender.com",
+        hostname: "visitnakuru-backend.onrender.com",
         pathname: "/images/**", 
       },
     ],
