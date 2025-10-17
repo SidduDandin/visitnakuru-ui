@@ -273,7 +273,7 @@ export default function Header() {
             <li><Link href="/about-us">{t("desktopMegaNav.about")}</Link></li>
             <li><Link href="#">{t("desktopMegaNav.services")}</Link></li>
             <li><Link href="#">{t("desktopMegaNav.careers")}</Link></li>
-            <li><Link href="#">{t("desktopMegaNav.blog")}</Link></li>
+            <li><Link href="/blog">{t("desktopMegaNav.blog")}</Link></li>
           </ul>
         </div>
       </Transition>

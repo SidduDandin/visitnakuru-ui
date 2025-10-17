@@ -74,6 +74,11 @@ const navItems = [
   // },
 
 
+  {
+    icon:  <ListIcon />,
+    name: "Manage Business Partners",
+    path: "/admin/partners",
+  },
 
   
   // {

@@ -104,5 +104,13 @@
     "copyright": "© {{year}} Besuchen Sie Nakuru. Alle Rechte vorbehalten.",
     "termsConditions": "AGB",
     "privacyPolicy": "Datenschutzerklärung"
-  }
+  },
+  "blogPage": {
+      "subtitle": "Entdecke die neuesten Nachrichten, Reiseführer und inspirierenden Geschichten aus unserer Community.",
+      "noBlogsFound": "Derzeit wurden keine Blogartikel gefunden.",
+      "readMore": "Mehr lesen",
+      "loadMore": "Mehr laden",
+      "backToAllBlogs": "← Zurück zu den Blogs",
+      "contentNotFound": "Es tut uns leid, der Inhalt dieses Blogbeitrags konnte derzeit nicht geladen werden."
+    }
 }

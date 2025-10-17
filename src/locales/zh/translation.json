@@ -102,5 +102,13 @@
     "copyright": "© {{year}} 游览纳库鲁. 保留所有权利。",
     "termsConditions": "条款与条件",
     "privacyPolicy": "隐私政策"
-  }
+  },
+  "blogPage": {
+      "subtitle": "探索来自我们社区的最新新闻、旅行指南和鼓舞人心的故事。",
+      "noBlogsFound": "目前没有找到博客文章。",
+      "readMore": "阅读更多",
+      "loadMore": "加载更多",
+      "backToAllBlogs": "← 返回博客",
+      "contentNotFound": "抱歉，目前无法加载此博客文章的内容。"
+    }
 }

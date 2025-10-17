@@ -30,7 +30,7 @@ const currentYear = new Date().getFullYear();
                   <Link href="#" className="text-white hover:underline">{t('footer.visitorInfo')}</Link>
                 </li>
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
-                  <Link href="#" className="text-white hover:underline">{t('footer.blog')}</Link>
+                  <Link href="/blog" className="text-white hover:underline">{t('footer.blog')}</Link>
                 </li>
               </ul>
             </div>

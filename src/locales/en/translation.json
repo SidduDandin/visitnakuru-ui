@@ -103,5 +103,13 @@
     "copyright": "© {{year}} Visit Nakuru All Rights Reserved.",
     "termsConditions": "Terms & Conditions",
     "privacyPolicy": "Privacy Policy"
+  },
+  "blogPage": {
+    "subtitle": "Explore the latest news, travel guides, and inspiring stories from our community.",
+    "noBlogsFound": "No blog articles found at the moment.",
+    "readMore": "Read More",
+    "loadMore": "Load More",
+    "backToAllBlogs": "← Back to Blogs",
+    "contentNotFound": "We're sorry, the content for this blog post could not be loaded at this time."
   }
 }
