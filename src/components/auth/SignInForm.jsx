@@ -37,6 +37,10 @@ export default function SignInForm() {
       return;
     }
     setIsLoading(true);//new
+
+    const expiresInDays = isChecked ? 7 : 1;
+    const maxAgeSeconds = 60 * 60 * 24 * expiresInDays;
+
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
       if (!backendUrl) {
@@ -48,14 +52,15 @@ export default function SignInForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password,expiresInDays }),
       });
       if (response.ok) {
         const data = await response.json();
         const token = data.token;
         // This form is exclusively for admins, so we set the isAdmin cookie to true.
         setCookie(null, "authToken", token, {
-          maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
+          //maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
+           maxAge: maxAgeSeconds,
           path: "/",
           httpOnly: false,
           secure: process.env.NODE_ENV === "production",
@@ -63,7 +68,8 @@ export default function SignInForm() {
         });
         // :star: NEW: Set the 'isAdmin' cookie to 'true' to satisfy the middleware's check.
         setCookie(null, "isAdmin", "true", {
-          maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
+         // maxAge: 60 * 60 * 24 * (isChecked ? 7 : 1),
+          maxAge: maxAgeSeconds,
           path: "/",
           httpOnly: false,
           secure: process.env.NODE_ENV === "production",

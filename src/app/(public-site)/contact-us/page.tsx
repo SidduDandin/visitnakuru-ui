@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 type ContactFormInputs = {
   ContactName: string;
@@ -33,6 +34,7 @@ export default function ContactPage() {
   const [newsletterStatus, setNewsletterStatus] = useState<string | null>(null);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
 
+     const { executeRecaptcha } = useGoogleReCaptcha();
   const {
     register: registerContact,
     handleSubmit: handleSubmitContact,
@@ -87,17 +89,40 @@ export default function ContactPage() {
     setContactLoading(true);
     setContactStatus(null);
 
+
+    if (!executeRecaptcha) {
+      console.error("reCAPTCHA not initialized");
+      setContactStatus(t("recaptcha.errorReload") || "reCAPTCHA error. Please reload the page.");
+      setContactLoading(false);
+      return;
+    }
+
+    const recaptchaToken = await executeRecaptcha("contactForm");
+    
+    if (!recaptchaToken) {
+       setContactStatus(t("recaptcha.tokenFailed") || "reCAPTCHA token generation failed.");
+       setContactLoading(false);
+       return;
+    }
+
     try {
       const contacturl = `${baseUrl}/api/contacts`;
       const res = await fetch(contacturl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+       // body: JSON.stringify(data),
+       body: JSON.stringify({ ...data, recaptchaToken }),
       });
 
       if (res.status === 404) {
         router.push("/error-404");
         return;
+      }
+
+      if (res.status === 403) {
+         setContactStatus(t("recaptcha.verificationFailed") || "Verification failed. Please try again.");
+         setContactLoading(false);
+         return;
       }
 
       if (res.status >= 500) {
@@ -135,18 +160,41 @@ const onSubmitNewsletter: SubmitHandler<NewsletterFormInputs> = async (
   setNewsletterLoading(true);
   setNewsletterStatus(null);
 
+
+  if (!executeRecaptcha) {
+      console.error("reCAPTCHA not initialized");
+      setNewsletterStatus(t("recaptcha.errorReload") || "reCAPTCHA error. Please reload the page.");
+      setNewsletterLoading(false);
+      return;
+    }
+
+  const recaptchaToken = await executeRecaptcha("newsletterSubscription");
+
+  if (!recaptchaToken) {
+       setNewsletterStatus(t("recaptcha.tokenFailed") || "reCAPTCHA token generation failed.");
+       setNewsletterLoading(false);
+       return;
+    }
+
   try {
     const letterurl = `${baseUrl}/api/newslettersubscriber`;
     const res = await fetch(letterurl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      //body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, recaptchaToken }),
     });
 
 
     if (res.status === 404) {
         router.push("/error-404");
         return;
+      }
+
+      if (res.status === 403) {
+         setNewsletterStatus(t("recaptcha.verificationFailed") || "Verification failed. Please try again.");
+         setNewsletterLoading(false);
+         return;
       }
 
       if (res.status >= 500) {

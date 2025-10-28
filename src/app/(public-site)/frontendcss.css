@@ -8,12 +8,6 @@
   --secondary: #3A7E87;
   --tertairy: #46454B;
   --black: #000000;
-
-
-
-
-
-  
   --white: #ffffff;
   --light-gray: #F7F7F7;
   --dark-gray: #46454B;
@@ -31,7 +25,8 @@
   --color-dark-gray: var(--dark-gray);
   --color-border: var(--border);
   --color-trans: var(--trans);
-  --font-outfit: var(--font-outfit);
+  --font-outfit: var(--font-montserrat);
+  --font-montserrat: var(--font-montserrat);
   --breakpoint-md: 768px;
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
@@ -88,8 +83,6 @@
     }
   }
 }
-
-
 
 @layer base {
   p{
@@ -411,4 +404,19 @@
 
 .description tr:nth-child(even) {
   @apply bg-gray-50;
+}
+
+.hero-banner-slider .swiper-button-prev:after,
+.hero-banner-slider .swiper-button-next:after,
+.events-slider-outer .swiper-button-prev:after,
+.events-slider-outer .swiper-button-next:after,
+.whatson-slider-outer .swiper-button-prev:after,
+.whatson-slider-outer .swiper-button-next:after,
+.swiper-button-prev:after,
+.swiper-button-next:after {
+  content: none !important;
+}
+.swiper-button-prev,
+.swiper-button-next {
+  font-size: 0 !important;
 }

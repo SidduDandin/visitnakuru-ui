@@ -1,7 +1,5 @@
 "use client";
-
 import { useEffect, useState } from "react";
-
 // Helper: Get cookie
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
@@ -10,20 +8,17 @@ const getCookie = (name) => {
   if (parts.length === 2) return parts.pop().split(";").shift();
   return null;
 };
-
 export default function ContactList() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedContact, setSelectedContact] = useState(null);
-
+  const [status, setStatus] = useState("");
   // Pagination + search
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState("");
-
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
   // Fetch contacts
   const fetchContacts = async () => {
     try {
@@ -31,7 +26,6 @@ export default function ContactList() {
       const res = await fetch(`${backendUrl}/api/contacts`, {
         headers: { "x-auth-token": token },
       });
-
       if (!res.ok) throw new Error("Failed to fetch contacts");
       const data = await res.json();
       setContacts(data);
@@ -41,48 +35,54 @@ export default function ContactList() {
       setLoading(false);
     }
   };
-
   // Delete contact
   const deleteContact = async (id) => {
     if (!confirm("Are you sure you want to delete this contact?")) return;
-
     try {
       const token = getCookie("authToken");
       const res = await fetch(`${backendUrl}/api/contacts/${id}`, {
         method: "DELETE",
         headers: { "x-auth-token": token },
       });
-
       if (!res.ok) throw new Error("Failed to delete contact");
       setContacts(contacts.filter((c) => c.ContactId !== id));
+      setStatus("Contact deleted successfully!"); 
     } catch (err) {
-      alert(err.message);
+       setStatus(err.message); 
     }
   };
-
   useEffect(() => {
     fetchContacts();
   }, []);
-
+    useEffect(() => {
+    if (status) {
+      const timer = setTimeout(() => setStatus(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
   if (loading) return <p>Loading contacts...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-
-
   const filteredContacts = contacts.filter((c) =>
     [c.ContactName, c.ContactEmail, c.ContactSubject, c.ContactMessage]
       .join(" ")
       .toLowerCase()
       .includes(search.toLowerCase())
   );
-
-
   const indexOfLast = currentPage * rowsPerPage;
   const indexOfFirst = indexOfLast - rowsPerPage;
   const currentContacts = filteredContacts.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredContacts.length / rowsPerPage);
-
   return (
     <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+      {status && (
+        <div
+          className={`p-3 mb-4 text-sm rounded-lg ${
+            status.includes("successfully") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
+          {status}
+        </div>
+      )}
      
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
          <select
@@ -112,7 +112,6 @@ export default function ContactList() {
         />
        
       </div>
-
       {/*  Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -171,7 +170,6 @@ export default function ContactList() {
           </tbody>
         </table>
       </div>
-
       {/* Pagination controls */}
       <div className="flex justify-between items-center mt-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -179,7 +177,6 @@ export default function ContactList() {
           {Math.min(indexOfLast, filteredContacts.length)} of{" "}
           {filteredContacts.length} contacts
         </p>
-
         <div className="flex gap-2">
           <button
             disabled={currentPage === 1}
@@ -200,18 +197,17 @@ export default function ContactList() {
           </button>
         </div>
       </div>
-
       
       {selectedContact && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-70">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full">
+       <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300">
+          <div className="relative bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-5xl mx-4 my-10 overflow-y-auto max-h-[85vh] transform transition-all duration-300 scale-100">
+          {/* <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full"> */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 Contact Details
               </h3>
             </div>
-
-            <div className="border rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-[50vh] overflow-y-auto">
+             <div className="border rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
               <div className="flex justify-between px-4 py-2">
                 <span className="font-medium">Name:</span>
                 <span>{selectedContact.ContactName}</span>
@@ -228,7 +224,7 @@ export default function ContactList() {
                     .replace(/ /g, "/")}
                 </span>
               </div>
-              <div className="flex justify-between px-4 py-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between px-4 py-2 break-words">
                 <span className="font-medium">Email:</span>
                 <a
                   href={`mailto:${selectedContact.ContactEmail}`}
@@ -252,7 +248,6 @@ export default function ContactList() {
                 </p>
               </div>
             </div>
-
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setSelectedContact(null)}

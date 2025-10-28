@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
-// Helper: Get cookie
+
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
   const value = `; ${document.cookie}`;
@@ -16,19 +16,19 @@ export default function NewsletterList() {
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Pagination + search
+  const [status, setStatus] = useState("");
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState("");
 
-  // Bulk selection state
+ 
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-  // Fetch subscribers
+
   const fetchSubscribers = async () => {
     try {
       const token = getCookie("authToken");
@@ -46,13 +46,13 @@ export default function NewsletterList() {
     }
   };
 
-  // Delete single subscriber
+ 
   const deleteSubscriber = async (id) => {
     if (!confirm("Are you sure you want to delete this subscriber?")) return;
     await deleteSubscribers([id]);
   };
 
-  // Bulk delete subscribers
+
   const deleteSubscribers = async (ids) => {
     if (!ids || ids.length === 0) return;
     if (!confirm(`Are you sure you want to delete ${ids.length} subscriber(s)?`)) return;
@@ -72,21 +72,25 @@ export default function NewsletterList() {
 
       const updatedSubscribers = subscribers.filter(s => !ids.includes(s.NLSubID));
       setSubscribers(updatedSubscribers);
-      setSelectedIds([]); // Clear selections after deletion
+      setSelectedIds([]); 
       setSelectAll(false);
+      const successMessage = ids.length === 1
+        ? "Subscriber deleted successfully!"
+        : `${ids.length} subscribers deleted successfully!`;
+      setStatus(successMessage);
     } catch (err) {
-      alert(err.message);
+      setStatus(err.message || "An unknown error occurred during deletion.");
     }
   };
 
-  // Toggle single checkbox
+
   const toggleSelect = (id) => {
     setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
     );
   };
 
-  // Toggle "Select All" checkbox
+  
   const toggleSelectAll = () => {
     if (selectAll) {
       setSelectedIds([]);
@@ -97,7 +101,7 @@ export default function NewsletterList() {
     setSelectAll(!selectAll);
   };
 
-  // Export all emails to Excel
+
   const exportToExcel = () => {
     const data = subscribers.map(s => ({ "Email Address": s.EmailAddress }));
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -106,23 +110,29 @@ export default function NewsletterList() {
     XLSX.writeFile(workbook, "newsletter_subscribers.xlsx");
   };
 
-  // ✅ Call all useEffect hooks unconditionally at the top level
+
   useEffect(() => {
     fetchSubscribers();
   }, []);
 
+   useEffect(() => {
+    if (status) {
+      const timer = setTimeout(() => setStatus(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
   const filteredSubscribers = subscribers.filter((s) =>
     s.EmailAddress.toLowerCase().includes(search.toLowerCase())
   );
-
-  // ✅ This hook must also be called unconditionally before any early returns
+  
   useEffect(() => {
     const allFilteredIds = filteredSubscribers.map(s => s.NLSubID);
     const allSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedIds.includes(id));
     setSelectAll(allSelected);
   }, [selectedIds, subscribers, search, filteredSubscribers]);
 
-  // Conditional early returns must come AFTER all hooks
+  
   if (loading) return <p>Loading subscribers...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -133,6 +143,15 @@ export default function NewsletterList() {
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+      {status && (
+        <div
+          className={`p-3 mb-4 text-sm rounded-lg ${
+            status.includes("successfully") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
+          {status}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
         <select
           value={rowsPerPage}
@@ -170,7 +189,8 @@ export default function NewsletterList() {
           </button>
           <button
             onClick={exportToExcel}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg"
+           disabled={subscribers.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export to Excel
           </button>
@@ -219,14 +239,6 @@ export default function NewsletterList() {
                       })
                       .replace(/ /g, "/")}
                   </td>
-                  {/* <td className="px-6 py-4">
-                    <button
-                      onClick={() => deleteSubscriber(s.NLSubID)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </td> */}
                 </tr>
               ))
             ) : (
@@ -240,7 +252,7 @@ export default function NewsletterList() {
         </table>
       </div>
 
-      {/* Pagination controls */}
+   
       <div className="flex justify-between items-center mt-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Showing {indexOfFirst + 1} to{" "}

@@ -104,7 +104,7 @@ export default function WhatsOn(){
 							</div>
 						</div>
 					</div>
-					<div className="absolute md:-top-9 -top-7 right-0 w-auto h-auto transform -translate-y-full flex gap-3" style={{"--swiper-navigation-size": "20px"}}>
+					<div className="absolute md:-top-9 -top-7 right-0 w-auto h-auto transform -translate-y-full flex gap-8" style={{"--swiper-navigation-size": "30px"}}>
 						<div className="swiper-button-prev !relative !text-primary">
 							<svg width="18" height="15" viewBox="0 0 18 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.97776 14L2 7.55372M2 7.55372L7.97776 1M2 7.55372H18" stroke="currentcolor" strokeWidth="2"/></svg>
 						</div>

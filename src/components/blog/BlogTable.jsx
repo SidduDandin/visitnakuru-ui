@@ -177,12 +177,14 @@ export default function BlogTable({
         // <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70 overflow-y-auto">
         //     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-4">
         //         <div className="flex justify-between items-center mb-4">
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-70 overflow-y-auto">
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-4">
+  <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300">
+    <div className="relative bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-5xl mx-4 my-10 overflow-y-auto max-h-[85vh] transform transition-all duration-300 scale-100">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold">Blog Details</h3>
+         <button onClick={() => setSelectedBlog(null)} className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">Close</button>
                 </div>
-                <div className="border rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-[48vh] overflow-y-auto">
+               
+                 <div className="border rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                     {selectedBlog.Image && (
                         <img src={`${backendUrl}/images/blogs/${selectedBlog.Image}`} alt={selectedBlog.blogTitle_en} className="w-full h-auto rounded-t-lg" />
                     )}
@@ -206,9 +208,7 @@ export default function BlogTable({
                     {selectedBlog.blogDescription_de && <div className="p-4"><h4 className="font-semibold text-lg mb-2">German (DE)</h4><p className="mb-2"><strong>Title:</strong> {selectedBlog.blogTitle_de}</p><div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedBlog.blogDescription_de }} /></div>}
                     {selectedBlog.blogDescription_zh && <div className="p-4"><h4 className="font-semibold text-lg mb-2">Chinese (ZH)</h4><p className="mb-2"><strong>Title:</strong> {selectedBlog.blogTitle_zh}</p><div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedBlog.blogDescription_zh }} /></div>}
                 </div>
-                <div className="flex justify-end mt-4">
-                    <button onClick={() => setSelectedBlog(null)} className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">Close</button>
-                </div>
+              
             </div>
         </div>
       )}

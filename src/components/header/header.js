@@ -91,18 +91,10 @@ export default function Header() {
                     <span className="md:hidden">EN</span>
                   </>
                 )}
-                <svg
-                  className="-mr-1 ml-2 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
+               <svg
+                  width="15" height="9" viewBox="0 0 15 9" fill="none" xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
+                  <path d="M1 1L7.44628 6.97776L14 1" stroke="currentColor" strokeWidth="2"></path>
                 </svg>
               </MenuButton>
             </div>
@@ -211,15 +203,15 @@ export default function Header() {
       >
         <div className="flex items-center h-full justify-center">
           <ul className="flex flex-col max-h-full overflow-auto gap-6 font-bold text-lg text-center w-full">
-            <li><Link href="/about-us">{t("mobileNav.aboutUs")}</Link></li>
-            <li><Link href="#">{t("mobileNav.news")}</Link></li>
-            <li><Link href="#">{t("mobileNav.dataReports")}</Link></li>
-            <li><Link href="#">{t("mobileNav.events")}</Link></li>
-            <li><Link href="#">{t("mobileNav.whyNairobi")}</Link></li>
-            <li><Link href="#">{t("mobileNav.startupSupport")}</Link></li>
-            <li><Link href="#">{t("mobileNav.keySectors")}</Link></li>
-            <li><Link href="#">{t("mobileNav.diaspora")}</Link></li>
-            <li><Link href="/contact-us">{t("mobileNav.contactUs")}</Link></li>
+            <li><Link href="/about-us" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.aboutUs")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.news")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.dataReports")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.events")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.whyNairobi")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.startupSupport")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.keySectors")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.diaspora")}</Link></li>
+            <li><Link href="/contact-us" onClick={() => {setMenuOpen(false); }}>{t("mobileNav.contactUs")}</Link></li>
           </ul>
         </div>
       </div>
@@ -268,12 +260,12 @@ export default function Header() {
       >
         <div className="p-6">
           <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
-            <li><Link href="/contact-us">{t("desktopMegaNav.contactUs")}</Link></li>
-            <li><Link href="#">{t("desktopMegaNav.support")}</Link></li>
-            <li><Link href="/about-us">{t("desktopMegaNav.about")}</Link></li>
-            <li><Link href="#">{t("desktopMegaNav.services")}</Link></li>
-            <li><Link href="#">{t("desktopMegaNav.careers")}</Link></li>
-            <li><Link href="/blog">{t("desktopMegaNav.blog")}</Link></li>
+            <li><Link href="/contact-us" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.contactUs")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.support")}</Link></li>
+            <li><Link href="/about-us" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.about")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.services")}</Link></li>
+            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.careers")}</Link></li>
+            <li><Link href="/blog" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.blog")}</Link></li>
           </ul>
         </div>
       </Transition>
