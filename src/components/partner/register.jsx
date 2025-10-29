@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+
 /**
  * PartnerOnboarding (Tailwind)
  * - Unified input borders (error => red border)
@@ -26,6 +28,8 @@ export default function PartnerOnboarding({ apiUrl }) {
   const [serverError, setServerError] = useState(null);
   const [isSuccessPage, setIsSuccessPage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const {
     register,
@@ -236,6 +240,8 @@ export default function PartnerOnboarding({ apiUrl }) {
     formData.append("OperatingHours", data.operatingHours);
     formData.append("FullDescription", data.fullDescription);
 
+    formData.append("recaptchaToken", data.recaptchaToken);
+
    // 🟢 Append documents (object form)
 if (documents && typeof documents === "object") {
   const seenDocs = new Set();
@@ -274,9 +280,49 @@ if (media?.video instanceof File) {
     }
     return res.json();
   },
-  onSuccess: () => setIsSuccessPage(true),
-  onError: (err) => setServerError(err?.message || "Submission failed"),
+  // onSuccess: () => setIsSuccessPage(true),
+  // onError: (err) => setServerError(err?.message || "Submission failed"),
+  onSuccess: () => {
+    setIsSubmitting(false); // Clear local submitting state
+    setIsSuccessPage(true);
+  },
+  onError: (err) => {
+    setIsSubmitting(false); // Clear local submitting state
+    setServerError(err?.message || "Submission failed");
+  },
 });
+
+const onFinalSubmit = async (data) => {
+    if (isSubmitting || mutation.isPending) return;
+
+    setIsSubmitting(true);
+    setServerError(null);
+
+    if (!executeRecaptcha) {
+      setServerError("reCAPTCHA service not available. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // 1. Execute reCAPTCHA with a specific action name
+      const recaptchaToken = await executeRecaptcha("partnerRegistration");
+
+      if (!recaptchaToken) {
+        setServerError("reCAPTCHA verification failed. Cannot submit form.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Call mutation with the combined data object
+      mutation.mutate({ ...data, recaptchaToken });
+      
+    } catch (error) {
+      console.error("reCAPTCHA/Submission error:", error);
+      setServerError("An internal error occurred during verification. Try again.");
+      setIsSubmitting(false);
+    }
+  };
 
   /* -------------------------
      Navigation & validation
@@ -385,59 +431,121 @@ if (media?.video instanceof File) {
         </div>
 
         <div className="p-8">
-          <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+          {/* <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6"> */}
+            <form onSubmit={handleSubmit(onFinalSubmit)} className="space-y-6">
             {/* STEP 1 */}
-            {step === 1 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-secondary">Step 1: Account Registration</h2>
+           {step === 1 && (
+  <div className="space-y-4">
+    <h2 className="text-lg font-semibold text-secondary">Step 1: Account Registration</h2>
 
-                <div>
-                  <label className="font-bold block mb-1">Business Name</label>
-                  <input {...register("businessName", { required: "Business Name is required" })} className={getInputClass("businessName")} />
-                  {errors.businessName && <p className="text-sm text-red-600 mt-1">{errors.businessName.message}</p>}
-                </div>
+    {/* Business Name */}
+    <div>
+      <label className="font-bold block mb-1">Business Name</label>
+      <input
+        {...register("businessName", { required: "Business Name is required" })}
+        className={getInputClass("businessName")}
+      />
+      {errors.businessName && (
+        <p className="text-sm text-red-600 mt-1">{errors.businessName.message}</p>
+      )}
+    </div>
 
-                <div>
-                  <label className="font-bold block mb-1">Contact Person</label>
-                  <input {...register("contactPerson", { required: "Contact Person is required" })} className={getInputClass("contactPerson")} />
-                  {errors.contactPerson && <p className="text-sm text-red-600 mt-1">{errors.contactPerson.message}</p>}
-                </div>
+    {/* Contact Person */}
+    <div>
+      <label className="font-bold block mb-1">Contact Person</label>
+      <input
+        {...register("contactPerson", { required: "Contact Person is required" })}
+        className={getInputClass("contactPerson")}
+      />
+      {errors.contactPerson && (
+        <p className="text-sm text-red-600 mt-1">{errors.contactPerson.message}</p>
+      )}
+    </div>
 
-                <div>
-                  <label className="font-bold block mb-1">Email</label>
-                  <input type="email" {...register("email", { required: "Email is required" })} className={getInputClass("email")} />
-                  {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
-                </div>
+    {/* Email */}
+    <div>
+      <label className="font-bold block mb-1">Email</label>
+      <input
+        type="email"
+        {...register("email", {
+          required: "Email is required",
+          pattern: {
+            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: "Please enter a valid email address",
+          },
+        })}
+        className={getInputClass("email")}
+      />
+      {errors.email && (
+        <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+      )}
+    </div>
 
-                <div>
-                  <label className="font-bold block mb-1">Phone</label>
-                  <input {...register("phone", { required: "Phone is required" })} className={getInputClass("phone")} />
-                  {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>}
-                </div>
+    {/* Phone */}
+    <div>
+      <label className="font-bold block mb-1">Phone</label>
+      <input
+        type="tel"
+        {...register("phone", {
+          required: "Phone number is required",
+          pattern: {
+            value: /^[0-9]{10}$/,
+            message: "Phone number must be 10 digits",
+          },
+        })}
+        className={getInputClass("phone")}
+      />
+      {errors.phone && (
+        <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+      )}
+    </div>
 
-                <div>
-                  <label className="font-bold block mb-1">Category</label>
-                  <select {...register("category", { required: "Category is required" })} className={getInputClass("category")}>
-                    <option value="">Select Category</option>
-                    {Object.keys(categories).map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {errors.category && <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>}
-                </div>
+    {/* Category */}
+    <div>
+      <label className="font-bold block mb-1">Category</label>
+      <select
+        {...register("category", { required: "Category is required" })}
+        className={getInputClass("category")}
+      >
+        <option value="">Select Category</option>
+        {Object.keys(categories).map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+      {errors.category && (
+        <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+      )}
+    </div>
 
-                <div>
-                  {watch("category") && (
-                    <>
-                      <label className="font-bold block mb-1">Subcategory</label>
-                      <select {...register("subcategory", { required: "Subcategory is required" })} className={getInputClass("subcategory")}>
-                        <option value="">Select Subcategory</option>
-                        {(categories[watch("category")] || []).map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      {errors.subcategory && <p className="text-sm text-red-600 mt-1">{errors.subcategory.message}</p>}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+    {/* Subcategory (Conditional) */}
+    <div>
+      {watch("category") && (
+        <>
+          <label className="font-bold block mb-1">Subcategory</label>
+          <select
+            {...register("subcategory", { required: "Subcategory is required" })}
+            className={getInputClass("subcategory")}
+          >
+            <option value="">Select Subcategory</option>
+            {(categories[watch("category")] || []).map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          {errors.subcategory && (
+            <p className="text-sm text-red-600 mt-1">
+              {errors.subcategory.message}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  </div>
+)}
+
 
             {/* STEP 2 */}
             {step === 2 && (
@@ -632,12 +740,20 @@ if (media?.video instanceof File) {
                   Next
                 </button>
               ) : (
-                 <button
+                //  <button
+                //   type="submit"
+                //   disabled={isSubmitting}
+                //   className={`btn btn-primary ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
+                // >
+                //   {isSubmitting ? "Submitting..." : "Submit"}
+                // </button>
+
+                <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className={`btn btn-primary ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
+                  disabled={isSubmitting || mutation.isPending}
+                  className={`btn btn-primary ${(isSubmitting || mutation.isPending) ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit"}
+                  {(isSubmitting || mutation.isPending) ? "Submitting..." : "Submit"}
                 </button>
               )}
             </div>
