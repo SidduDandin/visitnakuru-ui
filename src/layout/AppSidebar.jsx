@@ -48,6 +48,17 @@ const navItems = [
   },
 
   {
+    icon:  <ListIcon />,
+    name: "Manage Categories",
+    path: "/admin/categories",
+  },
+    {
+    icon:  <ListIcon />,
+    name: "Manage SubCategories",
+    path: "/admin/subcategories",
+  },
+
+  {
     name: "Contacts Received",
     icon: <UserCircleIcon />,
      path: "/admin/contact-us",
