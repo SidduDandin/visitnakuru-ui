@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Login() {
-
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +15,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
+          { credentials: "include" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) {
+            router.replace("/dashboard");
+          }
+        }
+      } catch (err) {
+        // Not logged in — ignore
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   // 🧩 Validate input fields
   const validateField = (name, value) => {

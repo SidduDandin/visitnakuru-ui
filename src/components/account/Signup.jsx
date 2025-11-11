@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Signup() {
-  
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,7 +22,25 @@ export default function Signup() {
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-
+useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
+          { credentials: "include" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) {
+            router.replace("/dashboard");
+          }
+        }
+      } catch (err) {
+        // Not logged in — ignore
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   // Password strength
   const getPasswordStrength = (password) => {
@@ -245,7 +263,7 @@ export default function Signup() {
 
             <p className="text-sm text-gray-500 text-center mt-3">
            Do you have an account?{" "}
-
+           
           <Link href="/login" className="text-primary hover:underline font-medium">Login</Link>
            
         </p>
