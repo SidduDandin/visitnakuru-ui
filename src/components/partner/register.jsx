@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
-
+import { parseCookies, destroyCookie } from "nookies";
 /**
  * PartnerOnboarding (Tailwind)
  * - Checks login; redirects if logged in
@@ -28,6 +28,7 @@ export default function PartnerOnboarding({ apiUrl }) {
 
   const router = useRouter();
   const { executeRecaptcha } = useGoogleReCaptcha();
+  const { userAuthToken } = parseCookies();
 
   const {
     register,
@@ -41,6 +42,39 @@ export default function PartnerOnboarding({ apiUrl }) {
 
   // ✅ Check auth — redirect logged-in users
 
+
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      if (!userAuthToken) {
+        router.push("/register");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`, {
+          method: "GET",
+          headers: { "x-auth-token": userAuthToken || "" },
+        });
+
+        if (res.status === 401) {
+          destroyCookie(null, "userAuthToken");
+          router.push("/login");
+          return;
+        }
+
+        const data = await res.json();
+        if (res.ok) setUser(data.user);
+        else console.error("Dashboard error:", data.message);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, [router, userAuthToken]);
 // useEffect(() => {
 //   const isFakeLoggedIn = true;
 //   if (isFakeLoggedIn) router.replace("/dashboard");
