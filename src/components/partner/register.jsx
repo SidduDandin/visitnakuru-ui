@@ -40,32 +40,6 @@ export default function PartnerOnboarding({ apiUrl }) {
   } = useForm({ mode: "onBlur" });
 
   // ✅ Check auth — redirect logged-in users
- useEffect(() => {
-  const checkAuth = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
-        {
-          method: "GET",
-          credentials: "include",   
-        }
-      );
-
-      if (!response.ok) return; // not logged in
-      const data = await response.json();
-
-      // Adjust key based on your backend response
-      if (data?.user || data?.email || data?.id) {
-        router.replace("/dashboard");
-      }
-    } catch (err) {
-      console.error("Auth check failed:", err);
-    }
-  };
-
-  // Run after hydration
-  if (typeof window !== "undefined") checkAuth();
-}, [router]);
 
 // useEffect(() => {
 //   const isFakeLoggedIn = true;
