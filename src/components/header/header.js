@@ -20,7 +20,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuDeskOpen, setMenuDeskOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
+ 
   const [user, setUser] = useState(null);
   // ======== Language context ========
   const { lang, changeLanguage, isMounted } = useLanguage();
@@ -87,7 +87,7 @@ export default function Header() {
     destroyCookie(null, "userAuthToken");
     //localStorage.removeItem("user");
     setIsLoggedIn(false);
-    setUsername("");
+    setUser(null);
     window.location.href = "/login";
   };
 
