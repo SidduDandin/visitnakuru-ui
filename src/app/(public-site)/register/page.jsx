@@ -2,9 +2,11 @@
 
 import Signup from "@/components/account/Signup";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { parseCookies, destroyCookie } from "nookies";
 
  const { userAuthToken } = parseCookies();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDashboard = async () => {
