@@ -96,8 +96,8 @@ export default function Login() {
               });
         
         setSuccessMsg("✅ Login successful!");
-       
-        router.replace("/dashboard"); // redirect after login
+        window.location.href="/dashboard"
+        //router.push("/dashboard"); // redirect after login
       } else {
         setErrors({ general: data.message || "Invalid credentials" });
       }

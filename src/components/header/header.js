@@ -12,17 +12,20 @@ import {
 } from "@headlessui/react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTranslation } from "react-i18next";
+import { parseCookies, destroyCookie } from "nookies";
 
 export default function Header() {
   // ======== State ========
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuDeskOpen, setMenuDeskOpen] = useState(false);
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [user, setUser] = useState(null);
   // ======== Language context ========
   const { lang, changeLanguage, isMounted } = useLanguage();
   const { t } = useTranslation();
-
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   // Supported languages
   const supportedLangs = [
     { code: "en", name: "English", short: "EN" },
@@ -46,6 +49,48 @@ export default function Header() {
     }
   }, [menuOpen]);
 
+ 
+
+  // ======== Fetch logged-in user from backend ========
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { userAuthToken } = parseCookies();
+      if (!userAuthToken) return;
+
+      try {
+        const res = await fetch(`${backendUrl}/api/users/dashboard`, {
+          headers: { "x-auth-token": userAuthToken },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setIsLoggedIn(true);
+          setUser(data.user);
+        } else {
+          setUser(null);
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        console.error("User fetch error:", err);
+      }
+    };
+
+    fetchUser();
+
+  // auto-refresh after login
+  window.addEventListener("userLogin", fetchUser);
+  return () => window.removeEventListener("userLogin", fetchUser);
+  }, [backendUrl]);
+
+  // ======== Logout ========
+   const handleLogout = () => {
+    destroyCookie(null, "userAuthToken");
+    //localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    setUsername("");
+    window.location.href = "/login";
+  };
+
   return (
     <header className="relative z-50 md:pr-7 pr-4">
       <div className="flex flex-nowrap items-center justify-between">
@@ -65,6 +110,8 @@ export default function Header() {
         {/* ======== Nav + Actions ======== */}
         <div className="flex flex-nowrap items-center justify-end gap-5 text-dark-gray grow-1">
           {/* ======== Desktop Nav ======== */}
+
+         
           <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
             <li><Link href="#">{t("nav.whatsOn")}</Link></li>
             <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
@@ -73,10 +120,13 @@ export default function Header() {
             <li><Link href="#">{t("nav.bookTickets")}</Link></li>
             <li><Link href="#">{t("nav.visitorInfo")}</Link></li>
           </ul>
+          
+  
+   
 
-          {/* ======== Language Switcher ======== */}
-          <Menu as="div" className="relative inline-block text-left">
-            <div>
+          {/* Logged out → Show Language Selector */}
+          {!isLoggedIn && (
+            <Menu as="div" className="relative inline-block text-left">
               <MenuButton className="inline-flex w-full justify-center items-center gap-x-1.5 rounded-md md:px-2 px-1 py-2 text-dark-gray focus:outline-none">
                 {isMounted ? (
                   <>
@@ -91,42 +141,122 @@ export default function Header() {
                     <span className="md:hidden">EN</span>
                   </>
                 )}
-               <svg
-                  width="15" height="9" viewBox="0 0 15 9" fill="none" xmlns="http://www.w3.org/2000/svg"
+                <svg
+                  width="15"
+                  height="9"
+                  viewBox="0 0 15 9"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M1 1L7.44628 6.97776L14 1" stroke="currentColor" strokeWidth="2"></path>
+                  <path
+                    d="M1 1L7.44628 6.97776L14 1"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  ></path>
                 </svg>
               </MenuButton>
-            </div>
 
-            <Transition
-              enter="transition ease-out duration-200"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="transition ease-in duration-150"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              <Transition
+                enter="transition ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="transition ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <MenuItems className="absolute right-0 z-[9999] mt-2 md:w-56 w-40 origin-top-right bg-white border border-border focus:outline-none">
+                  <div className="py-1 max-h-40 overflow-auto">
+                    {supportedLangs.map((l) => (
+                      <MenuItem key={l.code}>
+                        <button
+                          onClick={() => changeLanguage(l.code)}
+                          className={`w-full text-left block px-4 py-2 text-sm ${
+                            lang === l.code
+                              ? "bg-gray-100 font-semibold text-gray-900"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {l.name}
+                        </button>
+                      </MenuItem>
+                    ))}
+                  </div>
+                </MenuItems>
+              </Transition>
+            </Menu>
+          )}
+
+          {/* Logged in → Show user dropdown */}
+          {/* ======== User Dropdown when Logged In ======== */}
+
+          {isLoggedIn && (
+  <Menu as="div" className="relative inline-block text-left">
+    <MenuButton className="inline-flex w-full justify-center items-center gap-x-1.5 rounded-full border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 focus:outline-none transition">
+      Hi, {user.UserFullName || "User"}
+      <svg
+        width="15"
+        height="9"
+        viewBox="0 0 15 9"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="ml-1"
+      >
+        <path
+          d="M1 1L7.44628 6.97776L14 1"
+          stroke="currentColor"
+          strokeWidth="2"
+        ></path>
+      </svg>
+    </MenuButton>
+
+    <Transition
+      enter="transition ease-out duration-200"
+      enterFrom="opacity-0 scale-95"
+      enterTo="opacity-100 scale-100"
+      leave="transition ease-in duration-150"
+      leaveFrom="opacity-100 scale-100"
+      leaveTo="opacity-0 scale-95"
+    >
+      <MenuItems className="absolute right-0 z-[9999] mt-2 w-56 origin-top-right bg-white border border-border rounded-md shadow-lg focus:outline-none">
+        <div className="py-1">
+          <MenuItem>
+            <Link
+              href="/dashboard"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              <MenuItems className="absolute right-0 z-50 mt-2 md:w-56 w-40 origin-top-right bg-white border border-border focus:outline-none">
-                <div className="py-1 max-h-40 overflow-auto">
-                  {supportedLangs.map((l) => (
-                    <MenuItem key={l.code}>
-                      <button
-                        onClick={() => changeLanguage(l.code)}
-                        className={`w-full text-left block px-4 py-2 text-sm ${
-                          lang === l.code
-                            ? "bg-gray-100 font-semibold text-gray-900"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {l.name}
-                      </button>
-                    </MenuItem>
-                  ))}
-                </div>
-              </MenuItems>
-            </Transition>
-          </Menu>
+              Dashboard
+            </Link>
+          </MenuItem>
+          <MenuItem>
+            <Link
+              href="/profile"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Profile
+            </Link>
+          </MenuItem>
+          <MenuItem>
+            <Link
+              href="/business/register"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              List My Business
+            </Link>
+          </MenuItem>
+          <MenuItem>
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Logout
+            </button>
+          </MenuItem>
+        </div>
+      </MenuItems>
+    </Transition>
+  </Menu>
+          )}
+
 
           {/* ======== Search Button ======== */}
           <button
