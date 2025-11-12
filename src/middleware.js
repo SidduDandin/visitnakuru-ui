@@ -4,7 +4,7 @@ export async function middleware(req) {
   const path = req.nextUrl.pathname;
 
   const adminAuthToken = req.cookies.get('authToken')?.value;
-  //const userAuthToken = req.cookies.get('userAuthToken')?.value;
+  const userAuthToken = req.cookies.get('userAuthToken')?.value;
   const isAdminUser = req.cookies.get('isAdmin')?.value === 'true';
 
   const publicAdminAuthPaths = [
@@ -14,11 +14,11 @@ export async function middleware(req) {
   ];
   const protectedAdminPaths = ['/admin'];
 
-  // const publicUserAuthPaths = [
-  //   '/login',
-  //   '/register',
-  // ];
-  // const protectedUserPaths = ['/dashboard', '/business/register'];
+  const publicUserAuthPaths = [
+    '/login',
+    '/register',
+  ];
+  const protectedUserPaths = ['/dashboard', '/business/register'];
 
 
 //new 
@@ -45,20 +45,24 @@ export async function middleware(req) {
   }
 
   // // User Auth Pages
-  // if (publicUserAuthPaths.some(p => path.startsWith(p))) {
-  //   if (userAuthToken && !isAdminUser && path === '/login') {
-  //     return NextResponse.redirect(new URL('/dashboard', req.url));
-  //   }
-  //   return NextResponse.next();
-  // }
+  if (publicUserAuthPaths.some(p => path.startsWith(p))) {
+    if (userAuthToken &&  path === '/login') {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+    if (userAuthToken &&  path === '/register') {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+    
+    return NextResponse.next();
+  }
 
   // User Protected Pages
-  // if (protectedUserPaths.some(p => path.startsWith(p))) {
-  //   if (!userAuthToken) {
-  //     return NextResponse.redirect(new URL('/login', req.url));
-  //   }
-  //   return NextResponse.next();
-  // }
+  if (protectedUserPaths.some(p => path.startsWith(p))) {
+    if (!userAuthToken) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+    return NextResponse.next();
+  }
 
   // return NextResponse.next();
 }
