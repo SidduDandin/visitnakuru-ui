@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { setCookie } from "nookies";
 
 export default function Signup() {
   const router = useRouter();
@@ -22,25 +23,7 @@ export default function Signup() {
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
-          { credentials: "include" }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.user) {
-            router.replace("/dashboard");
-          }
-        }
-      } catch (err) {
-        // Not logged in — ignore
-      }
-    };
-    checkAuth();
-  }, [router]);
+
 
   // Password strength
   const getPasswordStrength = (password) => {
@@ -92,76 +75,107 @@ useEffect(() => {
 
   // Step 1: Register -> Send OTP
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setErrors({});
-    setSuccessMsg("");
+  e.preventDefault();
+  setErrors({});
+  setSuccessMsg("");
 
-    // Full validation
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Full name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email address";
-    if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password";
-    else if (formData.confirmPassword !== formData.password) newErrors.confirmPassword = "Passwords do not match";
+  // Full validation
+  const newErrors = {};
+  if (!formData.name.trim()) newErrors.name = "Full name is required";
+  if (!formData.email) newErrors.email = "Email is required";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email address";
+  if (!formData.password) newErrors.password = "Password is required";
+  else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
+  if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password";
+  else if (formData.confirmPassword !== formData.password) newErrors.confirmPassword = "Passwords do not match";
 
-    if (Object.keys(newErrors).length) return setErrors(newErrors);
+  if (Object.keys(newErrors).length) return setErrors(newErrors);
 
-    setLoading(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      setLoading(false);
+  setLoading(true);
 
-      if (res.ok) {
-        setStep(2);
-        setSuccessMsg("✅ OTP sent to your email. Please verify.");
-        setResendDisabled(true);
-        setResendTimer(15 * 60); // 15 minutes cooldown
-      } else {
-        setErrors({ general: data.message || "Something went wrong" });
-      }
-    } catch {
-      setLoading(false);
-      setErrors({ general: "⚠️ Unable to reach server. Try again later." });
+  try {
+    // Ensure we only send the required fields
+    const payload = {
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+    };
+
+    console.log("Sending OTP request with payload:", payload);
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/send-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (res.ok) {
+      // if (data.otp) {
+      //   alert(`Your test OTP is: ${data.otp}`);
+      // }
+      setOtp(data.otp);
+      setStep(2);
+      setSuccessMsg("✅ OTP sent successfully");
+      setResendDisabled(true);
+      setResendTimer(15 * 60); // 15 minutes cooldown
+    } else {
+      setErrors({ general: data.message || "Something went wrong" });
     }
-  };
+  } catch (err) {
+    console.error("Error sending OTP:", err);
+    setLoading(false);
+    setErrors({ general: "⚠️ Unable to reach server. Try again later." });
+  }
+};
 
   // Step 2: Verify OTP -> Save user in DB
   const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    if (!otp) return setErrors({ otp: "OTP is required" });
+  e.preventDefault();
+  if (!otp) return setErrors({ otp: "OTP is required" });
 
-    setLoading(true);
-    setErrors({});
-    setSuccessMsg("");
+  setLoading(true);
+  setErrors({});
+  setSuccessMsg("");
+  const maxAgeSeconds = 60 * 60 * 24 * 7;
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: formData.email, otp }),
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // send cookies automatically
+      body: JSON.stringify({ email: formData.email, otp }),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (res.ok) {
+      const token = data.token;
+     
+      // Set cookie
+      setCookie(null, "userAuthToken", token, {
+        maxAge: maxAgeSeconds,
+        path: "/",
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
       });
-      const data = await res.json();
-      setLoading(false);
 
-      if (res.ok) {
-        setSuccessMsg("✅ Verified! Redirecting to dashboard...");
-        window.location.href = "/dashboard";
-      } else {
-        setErrors({ otp: data.message || "Invalid OTP" });
-      }
-    } catch {
-      setLoading(false);
-      setErrors({ otp: "Server error" });
+      setSuccessMsg("✅ Verified! Redirecting to dashboard...");
+      window.location.href = "/dashboard";
+    } else {
+      // Backend error message (Invalid OTP, expired, or user not found)
+      setErrors({ otp: data.message || "Invalid OTP" });
     }
-  };
+  } catch (err) {
+    console.error("Frontend error in handleVerifyOTP:", err);
+    setLoading(false);
+    setErrors({ otp: "Server error. Please try again." });
+  }
+};
 
   // Resend OTP
   const handleResendOTP = async () => {
@@ -195,7 +209,7 @@ useEffect(() => {
     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
       {step === 1 ? (
         <>
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Create an Account</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Create Account</h2>
           {errors.general && <p className="text-red-600 text-center mb-3">{errors.general}</p>}
           {successMsg && <p className="text-green-600 text-center mb-3">{successMsg}</p>}
 
@@ -296,7 +310,12 @@ useEffect(() => {
                 disabled
                 className="w-full border rounded-lg p-3 bg-gray-100 text-gray-700 cursor-not-allowed"
               />
-              <p className="text-gray-500 text-sm mt-1 text-center">OTP has been sent to this email</p>
+             {successMsg && (
+    <p className="text-blue-600 text-center mt-1">
+      Your OTP is: <strong>{otp || "Not generated yet"}</strong>
+    </p>
+  )}
+              {/* <p className="text-gray-500 text-sm mt-1 text-center">OTP has been sent to this email</p> */}
             </div>
 
             {/* OTP boxes */}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { setCookie } from "nookies";
 
 export default function Login() {
   const router = useRouter();
@@ -15,25 +16,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
-          { credentials: "include" }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.user) {
-            router.replace("/dashboard");
-          }
-        }
-      } catch (err) {
-        // Not logged in — ignore
-      }
-    };
-    checkAuth();
-  }, [router]);
+  
 
   // 🧩 Validate input fields
   const validateField = (name, value) => {
@@ -70,6 +53,7 @@ export default function Login() {
     setLoading(true);
     setErrors({});
     setSuccessMsg("");
+    const maxAgeSeconds = 60 * 60 * 24 * 7;
 
     // ✅ Full validation on submit
     const newErrors = {
@@ -101,7 +85,18 @@ export default function Login() {
       setLoading(false);
 
       if (response.ok) {
+        const token = data.token;
+        // Set cookie
+         setCookie(null, "userAuthToken", token, {
+                maxAge: maxAgeSeconds,
+                path: "/",
+                httpOnly: false,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "Lax",
+              });
+        
         setSuccessMsg("✅ Login successful!");
+       
         router.replace("/dashboard"); // redirect after login
       } else {
         setErrors({ general: data.message || "Invalid credentials" });
