@@ -147,9 +147,11 @@ export default function AddBlogForm({
 
 
     const handleFormSubmit = async (data) => {
+
+        const trimmedEnTitle = data.blogTitle_en ? data.blogTitle_en.trim() : '';
         
         const enDescriptionPlainText = (data.blogDescription_en || "").replace(/<[^>]*>/g, "").trim();
-        if (!data.blogTitle_en.trim() || enDescriptionPlainText.length < 20) {
+        if (!trimmedEnTitle || enDescriptionPlainText.length < 20) {
             onError("Please ensure the English Title and Description are fully completed before submitting.");
             handleTabClick(activeTab); 
             return; 
@@ -158,7 +160,8 @@ export default function AddBlogForm({
         
         const formData = new FormData();
 
-        const slug = generateUrlSlug(data.blogTitle_en); 
+        //const slug = generateUrlSlug(data.blogTitle_en); 
+        const slug = generateUrlSlug(trimmedEnTitle);
         formData.append("blogURL", slug);
 
         for (const key in data) {
@@ -170,7 +173,15 @@ export default function AddBlogForm({
               
              } 
              else if (key !== 'published' && key !== 'isFeatured') {
-                formData.append(key, data[key] || ""); 
+               // formData.append(key, data[key] || ""); 
+
+               if (key.startsWith('blogTitle_')) {
+                    const trimmedValue = (data[key] || '').trim();
+                    formData.append(key, trimmedValue); 
+                } else {
+                    // For description and other non-title fields, append as is
+                    formData.append(key, data[key] || ""); 
+                }
             }
         }
         
@@ -252,7 +263,7 @@ export default function AddBlogForm({
                                         : 'text-gray-500 hover:text-gray-700'
                                 }`}
                             >
-                                {tab.label} {tab.required && '*'}
+                                {tab.label} {tab.required && <span className="text-red-500">*</span>}
                             </button>
                         ))}
                     </div>
@@ -262,7 +273,7 @@ export default function AddBlogForm({
                             
                             
                             <label htmlFor={tab.titleField} className="block mb-2 text-sm font-medium">
-                                Title ({tab.label}) {tab.required && '*'}
+                                Title ({tab.label}) {tab.required && <span className="text-red-500">*</span>}
                             </label>
                             <input
                                 type="text"
@@ -276,7 +287,7 @@ export default function AddBlogForm({
 
                            
                             <label className="block mb-2 text-sm font-medium">
-                                Description ({tab.label}) {tab.required && '*'}
+                                Description ({tab.label}) {tab.required && <span className="text-red-500">*</span>}
                             </label>
                             <Editor
                                 headerTemplate={editorHeader}
@@ -295,7 +306,7 @@ export default function AddBlogForm({
                     ))}
 
                 <div className="mt-4">
-                    <label htmlFor="image" className="block mb-2 text-sm font-medium">Image</label>
+                    <label htmlFor="image" className="block mb-2 text-sm font-medium">Image <span className="text-red-500">*</span></label>
                     <input
                         type="file"
                         id="image"

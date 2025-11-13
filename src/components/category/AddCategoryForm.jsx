@@ -42,6 +42,8 @@ export default function AddCategoryForm({
 
 
   const handleFormSubmit = async (data) => {
+
+     const trimmedCatName = data.CatName ? data.CatName.trim() : '';
     try {
       const url = editingCategory
         ? `${backendUrl}/api/categories/admin/${editingCategory.CatId}`
@@ -49,8 +51,8 @@ export default function AddCategoryForm({
       const method = editingCategory ? "PUT" : "POST";
 
       const bodyData = {
-        CatName: data.CatName,
-        CatURL: generateUrlSlug(data.CatName),
+        CatName: trimmedCatName,
+        CatURL: generateUrlSlug(trimmedCatName),
         ParentCategoryID: null, // This form always submits null for parent
       };
 
@@ -114,7 +116,7 @@ export default function AddCategoryForm({
             htmlFor="CatName"
             className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
           >
-            Category Name
+            Category Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"

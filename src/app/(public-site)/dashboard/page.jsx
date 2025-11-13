@@ -10,61 +10,55 @@ export default function Dashboard() {
   const [businesses, setBusinesses] = useState([]);
   const [packages, setPackages] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("active"); // New tab state
+  const [activeBusinessTab, setActiveBusinessTab] = useState("active");
+  const [activePackageTab, setActivePackageTab] = useState("active");
+
   const router = useRouter();
   const { userAuthToken } = parseCookies();
 
   useEffect(() => {
     const fetchDashboard = async () => {
       if (!userAuthToken) {
-        router.push("/login");
+        router.push("/register");
         return;
       }
+
       try {
+        // Fetch user info
         const resUser = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`,
-          {
-            method: "GET",
-            headers: { "x-auth-token": userAuthToken || "" },
-          }
+          { method: "GET", headers: { "x-auth-token": userAuthToken || "" } }
         );
 
         if (resUser.status === 401) {
           destroyCookie(null, "userAuthToken");
-          router.push("/login");
+          router.push("/register");
           return;
         }
 
         const userData = await resUser.json();
         if (resUser.ok) setUser(userData.user);
 
+        // Fetch businesses
         const resBusiness = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/business/my-list`,
-          {
-            headers: { "x-auth-token": userAuthToken || "" },
-          }
+          { headers: { "x-auth-token": userAuthToken || "" } }
         );
-        if (resBusiness.ok) {
-          const businessData = await resBusiness.json();
-          setBusinesses(businessData);
-        }
+        if (resBusiness.ok) setBusinesses(await resBusiness.json());
 
+        // Fetch packages
         const resPackages = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/packages/my-packages`,
-          {
-            headers: { "x-auth-token": userAuthToken || "" },
-          }
+          { headers: { "x-auth-token": userAuthToken || "" } }
         );
-        if (resPackages.ok) {
-          const packageData = await resPackages.json();
-          setPackages(packageData);
-        }
+        if (resPackages.ok) setPackages(await resPackages.json());
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchDashboard();
   }, [router, userAuthToken]);
 
@@ -96,16 +90,16 @@ export default function Dashboard() {
       </div>
     );
 
+  // Stats
   const totalBusinesses = businesses.length || 0;
   const totalPackages = packages.length || 0;
 
-  // Dummy tab data
-  const activeBusinesses = businesses.filter((b) => b.status === "active") || [];
-  const inProgressBusinesses = businesses.filter((b) => b.status === "in-progress") || [];
-
-  // If no backend status, we use dummy data
-  const dummyActive = activeBusinesses.length || 2;
-  const dummyInProgress = inProgressBusinesses.length || 3;
+  // Dummy records
+  const dummyActiveBusinesses = 2;
+  const dummyInProgressBusinesses = 3;
+  const dummyActivePackages = 3;
+  const dummyExpiredPackages = 1;
+  const dummyUpcomingPackages = 2;
 
   return (
     <div
@@ -128,7 +122,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() =>
-                destroyCookie(null, "userAuthToken") || router.push("/login")
+                destroyCookie(null, "userAuthToken") || router.push("/register")
               }
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
             >
@@ -152,82 +146,125 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold">$0</h2>
           </div>
           <div className="bg-gradient-to-r from-pink-400 to-pink-600 p-6 rounded-lg shadow text-white">
-            <p>Active Users</p>
-            <h2 className="text-2xl font-bold">1</h2>
+            <p>Active Packges</p>
+            <h2 className="text-2xl font-bold">3</h2>
           </div>
         </div>
 
         {/* Businesses Tabs */}
         <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">My Businesses</h2>
           <div className="flex border-b border-gray-300 dark:border-gray-700 mb-4">
             <button
               className={`px-4 py-2 -mb-px font-semibold border-b-2 ${
-                activeTab === "active"
-                  ? "border-green-500 text-green-500"
-                  : "border-transparent hover:text-green-500"
+                activeBusinessTab === "active"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent hover:text-green-600"
               }`}
-              onClick={() => setActiveTab("active")}
+              onClick={() => setActiveBusinessTab("active")}
             >
-              Active Businesses ({dummyActive})
+              Active Businesses ({dummyActiveBusinesses})
             </button>
             <button
               className={`px-4 py-2 -mb-px font-semibold border-b-2 ${
-                activeTab === "in-progress"
+                activeBusinessTab === "in-progress"
                   ? "border-yellow-500 text-yellow-500"
                   : "border-transparent hover:text-yellow-500"
               }`}
-              onClick={() => setActiveTab("in-progress")}
+              onClick={() => setActiveBusinessTab("in-progress")}
             >
-              In-Progress Businesses ({dummyInProgress})
+              In-Progress Businesses ({dummyInProgressBusinesses})
             </button>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(activeTab === "active" ? Array(dummyActive).fill({}) : Array(dummyInProgress).fill({})).map(
-              (_, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-lg transition"
-                >
-                  <h3 className="font-semibold text-lg">
-                    {activeTab === "active"
-                      ? `Active Business ${idx + 1}`
-                      : `In-Progress Business ${idx + 1}`}
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Category: Sample Category
-                  </p>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Created: {new Date().toLocaleDateString()}
-                  </p>
-                </div>
-              )
-            )}
+            {(activeBusinessTab === "active"
+              ? Array(dummyActiveBusinesses).fill(null)
+              : Array(dummyInProgressBusinesses).fill(null)
+            ).map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-lg transition"
+              >
+                <h3 className="font-semibold text-lg">
+                  {activeBusinessTab === "active"
+                    ? `Active Business ${idx + 1}`
+                    : `In-Progress Business ${idx + 1}`}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Category: Sample Category
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Created: {new Date().toLocaleDateString()}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* User Packages */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">My Packages</h2>
-          {packages.length === 0 ? (
-            <p>You have not subscribed to any packages yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {packages.map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-lg transition"
-                >
-                  <h3 className="font-semibold text-lg">{p.title}</h3>
-                  <p>{p.description}</p>
-                  <p className="text-sm">Price: ${p.price}</p>
-                  <p className="text-sm">
-                    Expires: {new Date(p.expiresAt).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Packages Tabs */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">My Packages</h2>
+          <div className="flex border-b border-gray-300 dark:border-gray-700 mb-4">
+            <button
+              className={`px-4 py-2 -mb-px font-semibold border-b-2 ${
+                activePackageTab === "active"
+                  ? "border-green-600 text-green-600"
+                  : "border-transparent hover:text-green-600"
+              }`}
+              onClick={() => setActivePackageTab("active")}
+            >
+              Active ({dummyActivePackages})
+            </button>
+            <button
+              className={`px-4 py-2 -mb-px font-semibold border-b-2 ${
+                activePackageTab === "expired"
+                  ? "border-red-600 text-red-600"
+                  : "border-transparent hover:text-red-600"
+              }`}
+              onClick={() => setActivePackageTab("expired")}
+            >
+              Expired ({dummyExpiredPackages})
+            </button>
+            <button
+              className={`px-4 py-2 -mb-px font-semibold border-b-2 ${
+                activePackageTab === "upcoming"
+                  ? "border-yellow-500 text-yellow-500"
+                  : "border-transparent hover:text-yellow-500"
+              }`}
+              onClick={() => setActivePackageTab("upcoming")}
+            >
+              Upcoming ({dummyUpcomingPackages})
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(
+              activePackageTab === "active"
+                ? Array(dummyActivePackages).fill(null)
+                : activePackageTab === "expired"
+                ? Array(dummyExpiredPackages).fill(null)
+                : Array(dummyUpcomingPackages).fill(null)
+            ).map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-lg transition"
+              >
+                <h3 className="font-semibold text-lg">
+                  {activePackageTab === "active"
+                    ? `Active Package ${idx + 1}`
+                    : activePackageTab === "expired"
+                    ? `Expired Package ${idx + 1}`
+                    : `Upcoming Package ${idx + 1}`}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Description: Sample package description
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Price: $99</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Expires: {new Date().toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

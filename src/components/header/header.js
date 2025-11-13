@@ -78,8 +78,8 @@ export default function Header() {
     fetchUser();
 
   // auto-refresh after login
-  window.addEventListener("userLogin", fetchUser);
-  return () => window.removeEventListener("userLogin", fetchUser);
+  // window.addEventListener("userLogin", fetchUser);
+  // return () => window.removeEventListener("userLogin", fetchUser);
   }, [backendUrl]);
 
   // ======== Logout ========
@@ -229,10 +229,10 @@ export default function Header() {
           </MenuItem>
           <MenuItem>
             <Link
-              href="/profile"
+              href="/settings"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              Profile
+              Settings
             </Link>
           </MenuItem>
           <MenuItem>

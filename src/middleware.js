@@ -16,9 +16,9 @@ export async function middleware(req) {
 
   const publicUserAuthPaths = [
     '/login',
-    '/register',
+    '/register','/forgot-password','reset-password',
   ];
-  const protectedUserPaths = ['/dashboard', '/business/register'];
+  const protectedUserPaths = ['/dashboard', '/business/register','/settings'];
 
 
 //new 

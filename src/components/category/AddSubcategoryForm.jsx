@@ -49,6 +49,7 @@ export default function AddSubcategoryForm({
 
 
   const handleFormSubmit = async (data) => {
+     const trimmedCatName = data.CatName ? data.CatName.trim() : '';
     try {
       const url = editingCategory
         ? `${backendUrl}/api/categories/admin/${editingCategory.CatId}`
@@ -56,8 +57,8 @@ export default function AddSubcategoryForm({
       const method = editingCategory ? "PUT" : "POST";
 
       const bodyData = {
-        CatName: data.CatName,
-        CatURL: generateUrlSlug(data.CatName),
+        CatName: trimmedCatName,
+        CatURL: generateUrlSlug(trimmedCatName),
        
         ParentCategoryID: data.ParentCategoryID, 
       };
@@ -131,7 +132,7 @@ export default function AddSubcategoryForm({
             htmlFor="ParentCategoryID"
             className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
           >
-            Category
+            Category <span className="text-red-500">*</span>
           </label>
           <select
             id="ParentCategoryID"
@@ -159,7 +160,7 @@ export default function AddSubcategoryForm({
             htmlFor="CatName"
             className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
           >
-            Sub Category Name
+            Sub Category Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"

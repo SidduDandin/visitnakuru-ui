@@ -59,6 +59,12 @@ const navItems = [
   },
 
   {
+    icon:  <ListIcon />,
+    name: "Manage Packages",
+    path: "/admin/packages",
+  },
+
+  {
     name: "Contacts Received",
     icon: <UserCircleIcon />,
      path: "/admin/contact-us",
