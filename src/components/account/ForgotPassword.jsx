@@ -30,10 +30,10 @@ export default function ForgotPassword() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!value.trim()) {
-      return "Please enter your email address"; 
+      return "email address is required"; 
     }
     if (!regex.test(value)) {
-      return "Please enter a valid email address"; 
+      return "Invalid email address"; 
     }
     
     return null;
@@ -123,7 +123,7 @@ export default function ForgotPassword() {
       )}
 
       {successMsg && (
-        <p className="text-green-600 text-center mb-3 font-semibold">{successMsg}</p>
+        <p className="text-green-600 text-center mb-3">{successMsg}</p>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">

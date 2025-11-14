@@ -5,16 +5,17 @@ import { useState } from "react";
 export default function ProfileForm({ user, token, onUpdate }) {
   const [formData, setFormData] = useState({
     fullName: user?.UserFullName || "",
-    phone: user?.PhoneNumber || "",
     email: user?.EmailAddress || "",
+    updatedAt: user?.UpdatedAt ? new Date(user.UpdatedAt).toLocaleString() : "",
   });
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.fullName.trim()) newErrors.fullName = "Please enter full name.";
+    if (!formData.fullName.trim()) newErrors.fullName = "Full Name is required.";
     return newErrors;
   };
 
@@ -26,6 +27,7 @@ export default function ProfileForm({ user, token, onUpdate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess("");
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
@@ -34,6 +36,7 @@ export default function ProfileForm({ user, token, onUpdate }) {
 
     try {
       setLoading(true);
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/update-profile`,
         {
@@ -42,15 +45,26 @@ export default function ProfileForm({ user, token, onUpdate }) {
             "Content-Type": "application/json",
             "x-auth-token": token,
           },
-          body: JSON.stringify({ name: formData.fullName, phone: formData.phone }),
+          body: JSON.stringify({
+            name: formData.fullName,
+          }),
         }
       );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed");
 
+      // Update UI
       setSuccess("Profile updated successfully!");
-      onUpdate(data.user);
+
+      const updatedTime = new Date(data.user.UpdatedAt).toLocaleString();
+
+      setFormData((prev) => ({
+        ...prev,
+        updatedAt: updatedTime,
+      }));
+
+      if (onUpdate) onUpdate(data.user);
     } catch (err) {
       setErrors({ form: err.message });
     } finally {
@@ -63,6 +77,9 @@ export default function ProfileForm({ user, token, onUpdate }) {
       {success && <div className="bg-green-100 text-green-600 p-2 rounded">{success}</div>}
       {errors.form && <div className="text-red-500 text-sm">{errors.form}</div>}
 
+     
+
+      {/* Full Name */}
       <div>
         <label className="block text-sm font-medium mb-1">Full Name</label>
         <input
@@ -80,23 +97,23 @@ export default function ProfileForm({ user, token, onUpdate }) {
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Phone Number</label>
-        <input
-          type="text"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          placeholder="Your phone number"
-          className="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
+        {/* Email FIRST */}
       <div>
         <label className="block text-sm font-medium mb-1">Email Address</label>
         <input
           type="email"
           value={formData.email}
+          disabled
+          className="w-full p-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed"
+        />
+      </div>
+      
+      {/* Updated At */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Last Updated</label>
+        <input
+          type="text"
+          value={formData.updatedAt}
           disabled
           className="w-full p-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed"
         />
