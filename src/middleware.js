@@ -52,6 +52,9 @@ export async function middleware(req) {
     if (userAuthToken &&  path === '/register') {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
+    if (userAuthToken &&  path === '/forgot-password') {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
     
     return NextResponse.next();
   }

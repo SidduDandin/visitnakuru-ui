@@ -41,6 +41,16 @@ const navItems = [
   //   name: "Manage Success Stories",
   //   path: "/admin/testimonials",
   // },
+
+  // {
+  //   name: "Manage Business",
+  //   icon: <ListIcon />,
+  //   subItems: [
+  //     { name: "Onboarding Business Partners", path: "/admin/onboarding-business-partners", pro: false },
+  //     { name: "Verified Business Partners", path: "/admin/verified-business-partners", pro: false },
+  //   ],
+  // },
+  
  {
     icon:  <BoxCubeIcon />,
     name: "Manage Blogs",
@@ -63,6 +73,12 @@ const navItems = [
     name: "Manage Packages",
     path: "/admin/packages",
   },
+
+  // {
+  //   name:"User Management",
+  //   icon :<UserCircleIcon/>,
+  //   path:"/admin/users",
+  // },
 
   {
     name: "Contacts Received",

@@ -276,7 +276,7 @@ export default function Signup() {
             </button>
 
             <p className="text-sm text-gray-500 text-center mt-3">
-           Do you have an account?{" "}
+           Already have an account?{" "}
            
           <Link href="/login" className="text-primary hover:underline font-medium">Login</Link>
            

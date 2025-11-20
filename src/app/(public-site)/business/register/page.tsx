@@ -2,10 +2,29 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PartnerRegisterComponent from "@/components/partner/register";
+import { parseCookies } from "nookies";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function RegisterPage() {
   const queryClient = new QueryClient(); // now created on client only
+  const { userAuthToken } = parseCookies();
+  const router = useRouter();  
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    if (!userAuthToken) {
+      router.push("/login");
+      return;
+    }
 
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/users/dashboard`, {
+      headers: { "x-auth-token": userAuthToken },
+    })
+      .then((res) => res.json())
+      .then((data) => setUser(data.user))
+      .catch(() => router.push("/login"));
+  }, [userAuthToken, router]);
+  
   return (
     <>
     {/* SECTION 1: Static Header - Content is now guaranteed to be translated */}
@@ -18,7 +37,9 @@ export default function RegisterPage() {
         </div>
       </section> */}
     <QueryClientProvider client={queryClient}>
-      <PartnerRegisterComponent apiUrl={`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/partners`}/>
+      <PartnerRegisterComponent apiUrl={`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/partners`}
+       user={user} userAuthToken={userAuthToken}
+      />
     </QueryClientProvider>
     </>
   );

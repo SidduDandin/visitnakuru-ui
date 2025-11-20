@@ -310,7 +310,7 @@ export default function Login() {
 
           {/* Register */}
           <p className="text-sm text-gray-500 text-center mt-3">
-            Don’t have an account?{" "}
+            New to Visitnakuru?{" "}
             <Link href="/register" className="text-primary hover:underline">
               Create Account
             </Link>
