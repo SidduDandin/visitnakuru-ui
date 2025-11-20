@@ -148,7 +148,7 @@ useEffect(() => {
 let active = true;
 const fetchTop = async () => {
 try {
-const res = await fetch("http://localhost:5000/api/categories/admin/category");
+const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/category`);
 if (!res.ok) throw new Error("Failed to fetch categories");
 const json = await res.json();
 if (!active) return;
@@ -172,7 +172,7 @@ return;
 let active = true;
 const fetchSub = async () => {
 try {
-const res = await fetch("http://localhost:5000/api/categories/admin/subcategory?parentId=${parentId}");
+const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/subcategory?parentId=${parentId}`);
 if (!res.ok) throw new Error("Failed to fetch subcategories");
 const json = await res.json();
 if (!active) return;
