@@ -610,7 +610,7 @@ return () => { active = false; };
                         {/* STEP 1: Registration */}
                         {step === 1 && (
                             <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 1: Account Registration</h2>
+                                <h2 className="text-lg font-semibold text-secondary">Step 1: Business Details</h2>
                                 
                                 {/* Category */}
                                 <div>
