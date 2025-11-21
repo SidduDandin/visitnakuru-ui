@@ -156,7 +156,7 @@ export default function AddPackageForm({
                     
                     <div>
                         <label htmlFor="PackagePrice" className="block mb-2 text-sm font-medium">
-                            Package Price ($) <span className="text-red-500">*</span>
+                            Package Price (Ksh) <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="number"

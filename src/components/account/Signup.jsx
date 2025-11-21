@@ -82,11 +82,11 @@ export default function Signup() {
   // Full validation
   const newErrors = {};
   if (!formData.name.trim()) newErrors.name = "Full name is required";
-  if (!formData.email) newErrors.email = "Email is required";
+  if (!formData.email) newErrors.email = "Email address is required";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email address";
   if (!formData.password) newErrors.password = "Password is required";
   else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
-  if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password";
+  if (!formData.confirmPassword) newErrors.confirmPassword = "Confirm your password is required";
   else if (formData.confirmPassword !== formData.password) newErrors.confirmPassword = "Passwords do not match";
 
   if (Object.keys(newErrors).length) return setErrors(newErrors);

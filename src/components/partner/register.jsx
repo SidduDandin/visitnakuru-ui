@@ -69,29 +69,7 @@ This Agreement is governed by the laws of Kenya, and disputes shall be handled u
 // --- END Agreement Text Content ---
 
 // --- Sample Packages Data for Step 5 ---
-const packages = [
-    {
-        PackageID: "1",
-        PackageName: "Basic Plan",
-        PackagePrice: 19.99,
-        Duration: "30 Days",
-        Features: ["Name & Contact", "Basic Description", "2 Photos"],
-    },
-    {
-        PackageID: "2",
-        PackageName: "Standard Plan",
-        PackagePrice: 39.99,
-        Duration: "60 Days",
-        Features: ["Full Profile", "5 Photos", "Map Link", "Basic Analytics"],
-    },
-    {
-        PackageID: "3",
-        PackageName: "Premium Plan",
-        PackagePrice: 59.99,
-        Duration: "90 Days",
-        Features: ["Top Placement", "Video Upload", "Priority Support", "Featured Toggle"],
-    },
-];
+
 // --- END Sample Packages Data ---
 
 
@@ -114,7 +92,7 @@ export default function PartnerOnboarding({ apiUrl,userAuthToken,user }) {
     // Category states (dynamic)
 const [topCategories, setTopCategories] = useState([]); // { CatId, CatName }
 const [subCategories, setSubCategories] = useState([]); // { CatId, CatName }
-
+const [packages, setPackages] = useState([]);
     const [serverError, setServerError] = useState(null);
     const [isSuccessPage, setIsSuccessPage] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,10 +114,6 @@ const [subCategories, setSubCategories] = useState([]); // { CatId, CatName }
 setValue("email", initialEmail);
 }, [initialEmail, setValue]);
 
-    // Watch the selected package ID to conditionally enable the 'isFeatured' toggle
-    const selectedPackageID = watch("packageID");
-    const selectedPackage = packages.find(pkg => pkg.PackageID === selectedPackageID);
-    //const canBeFeatured = selectedPackage?.PackageName.includes("Premium") || false; // Only Premium can be featured
   
     
     /* ----------------------- Categories & documents ------------------------*/
@@ -238,6 +212,34 @@ return () => { active = false; };
     };
 
 
+    // Fetch packages dynamically from DB
+useEffect(() => {
+let active = true;
+const fetchPackages = async () => {
+try {
+const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/packages/fpackage`);
+if (!res.ok) throw new Error("Failed to fetch packages");
+const json = await res.json();
+if (!active) return;
+// Normalize packages: ensure PackageID is string for radio values
+const normalized = (Array.isArray(json) ? json : []).map(p => ({
+PackageID: String(p.PackageID),
+PackageName: p.PackageName,
+PackagePrice: p.PackagePrice,
+Description: p.Description,
+DurationInDays: parseInt(p.DurationInDays?.toString?.() ?? 0),
+// If your backend returns features array add it here; otherwise keep empty
+Features: p.Features || []
+}));
+setPackages(normalized);
+} catch (e) {
+console.error("Error fetching packages", e);
+setPackages([]);
+}
+};
+fetchPackages();
+return () => { active = false; };
+}, []);
 
     /* ------------------------- File validation helpers ------------------------- */
     const isValidFile = (file, allowVideo = false) => {
@@ -340,6 +342,11 @@ return () => { active = false; };
         clearErrors("media.video");
     };
 
+  // Watch the selected package ID to conditionally enable the 'isFeatured' toggle
+    const selectedPackageID = watch("packageID");
+    const selectedPackage = packages.find(pkg => pkg.PackageID === selectedPackageID);
+    //const canBeFeatured = selectedPackage?.PackageName.includes("Premium") || false; // Only Premium can be featured
+
     /* ------------------------- Submit mutation ------------------------- */
     const mutation = useMutation({
         mutationFn: async (data) => {
@@ -370,6 +377,7 @@ return () => { active = false; };
   formData.append("InstagramLink", data.InstagramLink || "");
 
   // agreement fields
+  formData.append("AgreementText", AGREEMENT_TEXT);
   formData.append("agreementAcknowledged", data.agreementAcknowledged ? "true" : "false");
   formData.append("acknowledgementDate", data.acknowledgementDate || "");
   formData.append("acknowledgementSignature", data.acknowledgementSignature || "");
@@ -927,10 +935,13 @@ return () => { active = false; };
                                             <input type="radio" value={pkg.PackageID} {...register("packageID", { required: "Package selection is required" })} className="mt-1 w-4 h-4 text-primary" />
                                             <div className="ml-3">
                                                 <span className="font-bold text-lg block">{pkg.PackageName} - KES {pkg.PackagePrice.toLocaleString()}</span>
-                                                <p className="text-sm text-gray-600">{pkg.Duration}</p>
-                                                <ul className="text-xs text-gray-500 list-disc ml-4 mt-1">
-                                                    {pkg.Features.map((f, i) => <li key={i}>{f}</li>)}
-                                                </ul>
+                                                <p className="text-sm text-gray-600">{pkg.DurationInDays} Days</p>
+                                                <p className="text-sm text-gray-600">{pkg.Description}</p>
+                                             {Array.isArray(pkg.Features) && pkg.Features.length > 0 && (
+                        <ul className="text-xs text-gray-500 list-disc ml-4 mt-1">
+                          {pkg.Features.map((f, i) => <li key={i}>{f}</li>)}
+                        </ul>
+                      )}
                                             </div>
                                         </div>
                                     </label>

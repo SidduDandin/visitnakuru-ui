@@ -42,14 +42,14 @@ const navItems = [
   //   path: "/admin/testimonials",
   // },
 
-  // {
-  //   name: "Manage Business",
-  //   icon: <ListIcon />,
-  //   subItems: [
-  //     { name: "Onboarding Business Partners", path: "/admin/onboarding-business-partners", pro: false },
-  //     { name: "Verified Business Partners", path: "/admin/verified-business-partners", pro: false },
-  //   ],
-  // },
+  {
+    name: "Manage Business",
+    icon: <ListIcon />,
+    subItems: [
+      { name: "Onboarding Business Partners", path: "/admin/onboarding-business-partners", pro: false },
+      { name: "Verified Business Partners", path: "/admin/verified-business-partners", pro: false },
+    ],
+  },
   
  {
     icon:  <BoxCubeIcon />,
