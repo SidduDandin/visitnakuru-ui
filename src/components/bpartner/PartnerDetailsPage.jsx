@@ -24,11 +24,11 @@ const getCookie = (name) => {
 
 const getAssetUrl = (backendBaseUrl, item) => {
     if (!item) return "#";
-    const dbString = item.FilePath || item.FileName || "";
-    if (!dbString) return "#";
-    const cleanFileName = dbString.split('/').pop();
-    const baseUrl = backendBaseUrl.replace(/\/$/, ""); 
-    return `${baseUrl}/${cleanFileName}`;
+    const dbPath = item.FilePath || "";
+    if (!dbPath) return "#";
+    const baseUrl = backendBaseUrl.replace(/\/$/, "");
+    const cleanedDbPath = dbPath.startsWith('/') ? dbPath.substring(1) : dbPath;
+    return `${baseUrl}/${cleanedDbPath}`;
 };
 
 const isImage = (filename) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename);
@@ -599,7 +599,7 @@ export default function PartnerDetailsPage({ partnerId }) {
                                     return (
                                         <div key={idx} className="relative group bg-gray-100 aspect-square rounded overflow-hidden border">
                                             {isImg ? (
-                                                <img src={fileUrl} alt={photo.PhotoName} className="object-cover w-full h-full" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} />
+                                                <img src={fileUrl} alt={photo.PhotoName} className="object-cover w-full h-full" onError={(e) => e.target.src = "https://placehold.co/100?text=No Image"} />
                                             ) : (
                                                 <div className="flex items-center justify-center h-full text-gray-400 text-xs flex-col text-center p-1">
                                                     <span className="text-xl mb-1">📄</span>
