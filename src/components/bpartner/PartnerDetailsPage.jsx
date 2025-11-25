@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
+
 const ALL_STATUS_MAP = {
     1: { label: "Pending Review", style: "bg-yellow-100 text-yellow-800 border-yellow-200" },
     2: { label: "Needs Info", style: "bg-orange-100 text-orange-800 border-orange-200" },
@@ -22,12 +23,16 @@ const getCookie = (name) => {
     return null;
 };
 
+
+
+
 const getAssetUrl = (backendBaseUrl, item) => {
     if (!item) return "#";
-    const dbPath = item.FilePath || "";
+   
+    const dbPath = item.FilePath || ""; 
     if (!dbPath) return "#";
-    const baseUrl = backendBaseUrl.replace(/\/$/, "");
-    const cleanedDbPath = dbPath.startsWith('/') ? dbPath.substring(1) : dbPath;
+    const baseUrl = backendBaseUrl.replace(/\/$/, ""); 
+    const cleanedDbPath = dbPath.startsWith('/') ? dbPath.substring(1) : dbPath; 
     return `${baseUrl}/${cleanedDbPath}`;
 };
 
@@ -39,6 +44,14 @@ const formatDate = (dateString) => {
         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 };
+
+const formatDate2 = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString('en-GB', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+};
+
 
 const formatCurrency = (amount) => {
     if (!amount) return "0.00";
@@ -81,7 +94,8 @@ export default function PartnerDetailsPage({ partnerId }) {
         error: '' 
     });
 
-    // Rejection Reason State
+    const [agreementModal, setAgreementModal] = useState(false);
+
     const [rejectReason, setRejectReason] = useState("");
     const [rejectError, setRejectError] = useState("");
 
@@ -91,6 +105,19 @@ export default function PartnerDetailsPage({ partnerId }) {
     const [successModal, setSuccessModal] = useState({ show: false, title: '', message: '' });
 
     const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+    const [historyModal, setHistoryModal] = useState({ 
+        show: false, 
+        loading: false, 
+        error: '',
+    });
+    const [subscriptions, setSubscriptions] = useState([]);
+    const [historyPagination, setHistoryPagination] = useState({
+        currentPage: 1,
+        rowsPerPage: 10,
+        totalCount: 0,
+        totalPages: 1,
+    });
 
     const fetchPartnerDetails = useCallback(async () => {
         if (!partner) setLoading(true); 
@@ -135,7 +162,7 @@ export default function PartnerDetailsPage({ partnerId }) {
     const handleStatusUpdate = async () => {
         let reasonToSend = "";
 
-        // 1. Validation for "Request Info" (Status 2)
+        
         if (confirmModal.status === 2) {
             if (!requestInfoModal.reason.trim()) {
                 setRequestInfoModal(prev => ({ ...prev, error: "Please provide the list of details you want from the onboarding partner." }));
@@ -144,7 +171,7 @@ export default function PartnerDetailsPage({ partnerId }) {
             reasonToSend = requestInfoModal.reason.trim();
         }
 
-        // 2. Validation for "Reject" (Status 4)
+        
         if (confirmModal.status === 4) {
             if (!rejectReason.trim()) {
                 setRejectError("Please provide a reason for rejection.");
@@ -243,10 +270,59 @@ export default function PartnerDetailsPage({ partnerId }) {
         );
     };
 
+    const fetchSubscriptions = useCallback(async (page = historyPagination.currentPage, rows = historyPagination.rowsPerPage) => {
+    setHistoryModal(p => ({ ...p, loading: true, error: '' }));
+    try {
+        const token = getCookie('authToken');
+        if (!token) {
+            throw new Error("Authentication token not found.");
+        }
+
+        const response = await fetch(`${backendBaseUrl}/api/bpartner/${partnerId}/subscriptions?page=${page}&rowsPerPage=${rows}`, {
+            headers: {
+                'x-auth-token': token,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || "Failed to fetch subscription history.");
+        }
+
+        const data = await response.json();
+        setSubscriptions(data.subscriptions);
+        setHistoryPagination(data.pagination);
+
+    } catch (err) {
+        console.error("Subscription fetch error:", err);
+        setHistoryModal(p => ({ ...p, error: err.message }));
+        setSubscriptions([]);
+        setHistoryPagination({ currentPage: 1, rowsPerPage: 10, totalCount: 0, totalPages: 1 });
+    } finally {
+        setHistoryModal(p => ({ ...p, loading: false }));
+    }
+}, [partnerId, backendBaseUrl]);
+
+
+
+useEffect(() => {
+    if (historyModal.show) {
+        fetchSubscriptions(historyPagination.currentPage, historyPagination.rowsPerPage);
+    }
+}, [historyPagination.currentPage, historyPagination.rowsPerPage, historyModal.show, fetchSubscriptions]);
+
+
+const handleViewHistory = () => {
+    setHistoryModal(p => ({ ...p, show: true }));
+};
+
 
     if (loading && !partner) return <div className="flex h-screen items-center justify-center text-gray-500">Loading Data...</div>;
     if (error) return <div className="flex h-screen items-center justify-center text-red-600 font-bold">Error: {error}</div>;
     if (!partner) return null;
+
+
+    const latestSubscription = partner.subscriptions && partner.subscriptions.length > 0 ? partner.subscriptions[0] : null;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 relative">
@@ -363,8 +439,8 @@ export default function PartnerDetailsPage({ partnerId }) {
                                     Reason for Blocking <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
-                                    value={blockReason} // Use blockReason state
-                                    onChange={(e) => { setBlockReason(e.target.value); setBlockError(""); }} // Update blockReason state
+                                    value={blockReason} 
+                                    onChange={(e) => { setBlockReason(e.target.value); setBlockError(""); }} 
                                     className={`w-full p-3 border rounded-lg resize-none dark:bg-gray-700 dark:text-white focus:ring-red-500 focus:border-red-500 text-sm ${blockError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} // Use blockError
                                     rows="3"
                                     placeholder="Please explain why this verified business partner is being blocked..."
@@ -421,11 +497,7 @@ export default function PartnerDetailsPage({ partnerId }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        
-                       
-                        
-
-                       
+            
                         {(partner.Status === 2 || partner.Status === 4 || partner.Status === 7) && partner.Requestmoreinfo && (
                             <div className={`p-6 rounded-xl shadow-sm border ${
                                 partner.Status === 4 
@@ -460,6 +532,7 @@ export default function PartnerDetailsPage({ partnerId }) {
                                 <LabelValue label="Subcategory" value={partner.subcategory?.CatName} />
                                 <LabelValue label="Business Name" value={partner.BusinessName} />
                                 <LabelValue label="Contact Person" value={partner.ContactName} />
+                                <LabelValue label="Operating Hours" value={partner.OperatingHours} />
                             </div>
                         </div>
 
@@ -472,6 +545,7 @@ export default function PartnerDetailsPage({ partnerId }) {
                                 <LabelValue label="WhatsApp" value={partner.WhatsAppNumber} />
                                 <LabelValue label="Website" value={partner.Website} isLink linkUrl={partner.Website} />
                                 <LabelValue label="Address" value={partner.Address} />
+                                
                             </div>
                              <div className="mt-4 pt-4 border-t dark:border-gray-700">
                                 <h5 className="text-xs font-bold uppercase text-gray-500 mb-3">Social Media</h5>
@@ -495,22 +569,26 @@ export default function PartnerDetailsPage({ partnerId }) {
                         </div>
 
                         {/* Subscriptions */}
+                        
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
                             <SectionHeader title="Subscription & Billing" icon="💳" />
-                            {partner.subscriptions && partner.subscriptions.length > 0 ? (
-                                partner.subscriptions.map((sub, idx) => (
-                                    <div key={idx} className="p-4 border border-green-300 bg-green-50 dark:bg-green-900/30 dark:border-green-700 rounded-lg mb-4 hover:shadow-md transition-shadow">
+                            {latestSubscription ? (
+                            //partner.subscriptions && partner.subscriptions.length > 0 ? (
+                                
+                                //partner.subscriptions.map((sub, idx) => (
+                                    //key={idx} 
+                                   <div  className="p-4 border border-green-300 bg-green-50 dark:bg-green-900/30 dark:border-green-700 rounded-lg mb-4 hover:shadow-md transition-shadow">
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <h4 className="font-extrabold text-green-900 dark:text-green-200 text-xl">
-                                                    {sub.package?.PackageName || "Unknown Package"}
+                                                    {latestSubscription.package?.PackageName || "Unknown Package"}
                                                 </h4>
                                                 <p className="text-sm text-green-800 dark:text-green-300 mt-1">
-                                                    Duration: {sub.package?.DurationInDays ? `${sub.package.DurationInDays} Days` : "Not Available"} | Total Paid: {formatCurrency(sub.TotalAmount)}
+                                                    Duration: {latestSubscription.package?.DurationInDays ? `${latestSubscription.package.DurationInDays} Days` : "Not Available"} | Total Paid: {formatCurrency(latestSubscription.TotalAmount)}
                                                 </p>
                                             </div>
                                             <span className="px-3 py-1 bg-green-200 text-green-800 text-xs font-bold uppercase rounded-full self-center whitespace-nowrap">
-                                                {sub.Status || "Unknown"}
+                                                {latestSubscription.Status || "Unknown"}
                                             </span>
                                         </div>
                                         <hr className="border-green-200 dark:border-green-800 my-2" />
@@ -518,42 +596,65 @@ export default function PartnerDetailsPage({ partnerId }) {
                                             <div>
                                                 <span className="font-medium text-gray-500 dark:text-gray-400">Validity:</span> 
                                                 <p className="text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-300">{formatDate(sub.StartDate)}</span> &rarr; 
-                                                    <span className="font-bold text-red-500 dark:text-red-400"> {formatDate(sub.EndDate)}</span>
+                                                    <span className="text-gray-600 dark:text-gray-300">{formatDate2(latestSubscription.StartDate)}</span> &rarr; 
+                                                    <span className="font-bold text-red-500 dark:text-red-400"> {formatDate2(latestSubscription.EndDate)}</span>
                                                 </p>
                                             </div>
                                             <div>
                                                 <span className="font-medium text-gray-500 dark:text-gray-400">Payment Details:</span>
                                                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                    {sub.PaymentMethod || "Not Available"} @ {formatCurrency(sub.PackagePrice) || "Not Available"}
+                                                    {latestSubscription.PaymentMethod || "Not Available"} @ {formatCurrency(latestSubscription.PackagePrice) || "Not Available"}
                                                 </p>
                                             </div>
+                                            {/* <div>
+                                                <span className="font-medium text-gray-500 dark:text-gray-400">
+                                                    {sub.PaymentMethod ? "Payment Details:" : "Package Amount:"}
+                                                </span>
+                                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                    {
+                                                        sub.PaymentMethod && sub.PaymentMethod.trim() !== "" 
+                                                            ? `${sub.PaymentMethod} @ ${formatCurrency(sub.PackagePrice) || "Not Available"}` 
+                                                            : formatCurrency(sub.PackagePrice) || "Not Available"
+                                                    }
+                                                </p>
+                                            </div> */}
                                             <div>
                                                 <span className="font-medium text-gray-500 dark:text-gray-400">Transaction ID:</span>
                                                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                    {sub.TransactionID || "Not Available"}
+                                                    {latestSubscription.TransactionID || "Not Available"}
                                                 </p>
                                             </div>
                                             <div>
                                                 <span className="font-medium text-gray-500 dark:text-gray-400">Paid On:</span>
                                                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                    {sub.PaymentDate ? formatDate(sub.PaymentDate) : "Not Available"}
+                                                    {latestSubscription.PaymentDate ? formatDate2(latestSubscription.PaymentDate) : "Not Available"}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="mt-4 p-2 bg-green-100 dark:bg-green-900/50 rounded text-xs italic text-gray-600 dark:text-gray-400">
-                                            <span className="font-medium">Description:</span> {sub.package?.Description || "No description provided."}
+                                            <span className="font-medium">Description:</span> {latestSubscription.package?.Description || "No description provided."}
                                         </div>
                                     </div>
-                                ))
+
+                                    
+                                //))
                             ) : (
                                 <p className="text-base text-gray-500 italic p-3">
                                     No active or past subscription records found for this partner.
                                 </p>
                             )}
+                            
+                            <button
+                                onClick={handleViewHistory}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-150 shadow-md disabled:opacity-50"
+                                disabled={!partner || historyModal.loading}
+                            >
+                                
+                                View Payment History
+                            </button>
                         </div>
                        
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                        {/* <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                              <SectionHeader title="Agreements" icon="⚖️" />
                              {partner.agreements?.length > 0 ? (
                                 <ul className="text-sm list-disc list-inside">
@@ -562,6 +663,29 @@ export default function PartnerDetailsPage({ partnerId }) {
                                     ))}
                                 </ul>
                              ) : <p className="text-sm text-gray-500 italic">No agreements.</p>}
+                        </div> */}
+
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                            <SectionHeader title="Agreements" icon="⚖️" />
+                            {partner.agreements?.length > 0 ? (
+                                <>
+                                    <ul className="text-sm list-disc list-inside mb-4">
+                                        {partner.agreements.map((agr, idx) => (
+                                            <li key={idx}>Signed by {agr.SignedName} on {formatDate(agr.SignedDate)}</li>
+                                        ))}
+                                    </ul>
+                                    <button 
+                                        onClick={() => setAgreementModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        View Agreement
+                                    </button>
+                                </>
+                            ) : <p className="text-sm text-gray-500 italic">No agreements.</p>}
                         </div>
                     </div>
 
@@ -686,7 +810,188 @@ export default function PartnerDetailsPage({ partnerId }) {
                 
 
             </div>
+
+
+            {/* Agreement Text Modal */}
+{agreementModal && (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 transition-opacity">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col border border-gray-200 dark:border-gray-700 transform scale-100">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>⚖️</span> Partner Agreements
+                </h3>
+                {/* <button 
+                    onClick={() => setAgreementModal(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button> */}
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-grow overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900/50">
+                {partner.agreements?.map((agr, idx) => (
+                    <div key={idx} className="mb-8 last:mb-0">
+                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            <span className="text-xs font-bold px-2 py-1 bg-blue-100 text-blue-800 rounded uppercase">
+                               Agreement {/* Agreement #{idx + 1} */}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                Signed by <span className="text-gray-900 dark:text-white">{agr.SignedName}</span> on {formatDate(agr.SignedDate)}
+                            </span>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                {agr.AgreementText || "No text content available for this agreement."}
+                            </pre>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-xl text-right">
+                <button 
+                    onClick={() => setAgreementModal(false)}
+                    className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                >
+                    Close
+                </button>
+            </div>
         </div>
-    );
+    </div>
+)}
+
+
+            {historyModal.show && (
+<div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300">
+          <div className="relative bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-5xl mx-4 my-10 overflow-y-auto max-h-[85vh] transform transition-all duration-300 scale-100">
+            
+            {/* Modal Header */}
+            <div className="sticky top-0 p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 z-10 flex justify-between items-center">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    
+                    Partner Subscription & Payment History
+                </h3>
+                <button 
+                    onClick={() => setHistoryModal({ show: false, loading: false, error: '' })}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                    aria-label="Close"
+                >
+                    
+                </button>
+            </div>
+
+            {/* Modal Body with Scrollable Content */}
+            <div className="flex-grow overflow-y-auto p-6">
+                
+                {historyModal.loading && (
+                    <div className="flex justify-center items-center h-full">
+                      
+                        <p className="ml-3 text-lg text-gray-600 dark:text-gray-300">Loading payment history...</p>
+                    </div>
+                )}
+
+                {historyModal.error && (
+                    <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
+                        <span className="font-medium">Error:</span> {historyModal.error}
+                    </div>
+                )}
+                
+                {!historyModal.loading && !historyModal.error && (
+                    <>
+                        {subscriptions.length === 0 ? (
+                            <div className="text-center p-10">
+                                <p className="text-xl text-gray-500 dark:text-gray-400">No subscription history found for this partner.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-50 dark:bg-gray-800">
+                                        <tr>
+                                            {["Package Name", "Package Price", "Total Amount", "Payment Method", "Transaction ID", "Paid Date", "Status", "Start Date", "End Date"].map((header) => (
+                                                <th
+                                                    key={header}
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                                >
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {subscriptions.map((sub, index) => (
+                                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-150">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{sub.PackageName}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatCurrency(sub.PackagePrice)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 font-semibold">{formatCurrency(sub.TotalAmount)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{sub.PaymentMethod || 'N/A'}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 break-words max-w-xs overflow-hidden">{sub.TransactionID || 'N/A'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate2(sub.PaymentDate)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    {/* Assuming a simple status display based on common values */}
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${sub.Status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}`}>
+                                                        {sub.Status || 'Pending'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate2(sub.StartDate)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate2(sub.EndDate)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        
+                        {/* Pagination Controls */}
+                        {historyPagination.totalCount > historyPagination.rowsPerPage && (
+                            <div className="flex justify-between items-center mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Showing {(historyPagination.currentPage - 1) * historyPagination.rowsPerPage + 1} to{" "}
+                                    {Math.min(historyPagination.currentPage * historyPagination.rowsPerPage, historyPagination.totalCount)} of{" "}
+                                    {historyPagination.totalCount} records
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={historyPagination.currentPage === 1 || historyModal.loading}
+                                        onClick={() => setHistoryPagination(p => ({ ...p, currentPage: p.currentPage - 1 }))}
+                                        className="px-3 py-1 border rounded-lg disabled:opacity-50 dark:border-gray-600 dark:text-white dark:hover:bg-gray-800"
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className="px-3 py-1 text-gray-700 dark:text-gray-300">
+                                        Page {historyPagination.currentPage} of {historyPagination.totalPages || 1}
+                                    </span>
+                                    <button
+                                        disabled={historyPagination.currentPage === historyPagination.totalPages || historyModal.loading || historyPagination.totalCount === 0}
+                                        onClick={() => setHistoryPagination(p => ({ ...p, currentPage: p.currentPage + 1 }))}
+                                        className="px-3 py-1 border rounded-lg disabled:opacity-50 dark:border-gray-600 dark:text-white dark:hover:bg-gray-800"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+             {/* Modal Footer */}
+            <div className="sticky bottom-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-right">
+                 <button 
+                    onClick={() => setHistoryModal({ show: false, loading: false, error: '' })}
+                    className="px-6 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-150 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+</div>
+);
 }
 

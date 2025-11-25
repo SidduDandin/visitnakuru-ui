@@ -5,15 +5,17 @@ import { useMutation } from "@tanstack/react-query";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Link from "next/link";
 
-
 /**
- * PartnerOnboarding (Tailwind) - UPDATED
- * - Total steps increased to 6
- * - Added Step 5 (Package Selection) and Step 6 (Review & Submit)
+ * PartnerOnboarding (Tailwind) - PATCHED
+ * - WhatsApp moved to Step 1 (E.164 validation)
+ * - File upload dedupe removed (same-name files allowed)
+ * - Photo upload appends instead of overwriting
+ * - URL validation for Google Maps & social links
+ * - Business name & contact person maxLength = 50
+ * - Short & full descriptions minLength = 20
  */
 
 // --- Agreement Text Content ---
-// Effective Date and Last Updated placeholders
 const AGREEMENT_TEXT = `This document sets out the rules, regulations, and code of conduct for all companies, service providers, and partners listed on VisitNakuru.com, the official visitor guide for Nakuru County. By being listed, each Partner agrees to comply with these standards.
 
 1. General Conduct
@@ -68,946 +70,1050 @@ This Agreement is governed by the laws of Kenya, and disputes shall be handled u
 `;
 // --- END Agreement Text Content ---
 
-// --- Sample Packages Data for Step 5 ---
+export default function PartnerOnboarding({ apiUrl, userAuthToken, user }) {
+  const initialEmail = user?.EmailAddress || "";
 
-// --- END Sample Packages Data ---
-
-
-export default function PartnerOnboarding({ apiUrl,userAuthToken,user }) {
-  
-    const initialEmail = user?.EmailAddress || "";
   // 6 Steps: 1. Registration, 2. Documents & Location, 3. Agreement, 4. Content & Media, 5. Packages, 6. Review
-    const totalSteps = 6; 
-    const [step, setStep] = useState(1);
-    
-    // Hardcoded email for the logged-in user simulation
-    //const LOGGED_IN_USER_EMAIL = formData.email; 
+  const totalSteps = 6;
+  const [step, setStep] = useState(1);
 
-    // uploaded files / previews
-    const [documents, setDocuments] = useState({}); // { DOC_KEY: File }
-    const [documentPreviews, setDocumentPreviews] = useState({}); // { DOC_KEY: url | filename }
-    const [media, setMedia] = useState({ photos: [], video: null });
-    const [mediaPreviews, setMediaPreviews] = useState({ photos: [], video: null });
-    
-    // Category states (dynamic)
-const [topCategories, setTopCategories] = useState([]); // { CatId, CatName }
-const [subCategories, setSubCategories] = useState([]); // { CatId, CatName }
-const [packages, setPackages] = useState([]);
-    const [serverError, setServerError] = useState(null);
-    const [isSuccessPage, setIsSuccessPage] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  // uploaded files / previews
+  const [documents, setDocuments] = useState({}); // { DOC_KEY: File }
+  const [documentPreviews, setDocumentPreviews] = useState({}); // { DOC_KEY: url | filename }
+  const [media, setMedia] = useState({ photos: [], video: null });
+  const [mediaPreviews, setMediaPreviews] = useState({ photos: [], video: null });
 
-    
-    const { executeRecaptcha } = useGoogleReCaptcha();
-    
-    const { register, handleSubmit, trigger, watch, setError, clearErrors, setValue, formState: { errors }, } = useForm({ 
-        mode: "onBlur",
-        defaultValues: {
-            // Set the logged-in email as default and register it
-            email: initialEmail,
-            // Default package selection to force user choice
-            packageID: "", 
-            isFeatured: false,
-        }
-    });
-    useEffect(() => {
-setValue("email", initialEmail);
-}, [initialEmail, setValue]);
+  // Category states (dynamic)
+  const [topCategories, setTopCategories] = useState([]); // { CatId, CatName }
+  const [subCategories, setSubCategories] = useState([]); // { CatId, CatName }
+  const [packages, setPackages] = useState([]);
+  const [serverError, setServerError] = useState(null);
+  const [isSuccessPage, setIsSuccessPage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  
-    
-    /* ----------------------- Categories & documents ------------------------*/
-    // Fetch top-level categories on mount
-useEffect(() => {
-let active = true;
-const fetchTop = async () => {
-try {
-const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/category`);
-if (!res.ok) throw new Error("Failed to fetch categories");
-const json = await res.json();
-if (!active) return;
-setTopCategories(Array.isArray(json) ? json : []);
-} catch (e) {
-console.error("Error fetching top categories", e);
-setTopCategories([]);
-}
-};
-fetchTop();
-return () => { active = false; };
-}, []);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
-// When category (parent) changes, fetch its subcategories
-useEffect(() => {
-const parentId = watch("category");
-if (!parentId) {
-setSubCategories([]);
-return;
-}
-let active = true;
-const fetchSub = async () => {
-try {
-const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/subcategory?parentId=${parentId}`);
-if (!res.ok) throw new Error("Failed to fetch subcategories");
-const json = await res.json();
-if (!active) return;
-setSubCategories(Array.isArray(json) ? json : []);
-} catch (e) {
-console.error("Error fetching subcategories", e);
-setSubCategories([]);
-}
-};
-fetchSub();
-return () => { active = false; };
-}, [watch("category")]);
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    setError,
+    clearErrors,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    mode: "onBlur",
+    defaultValues: {
+      email: initialEmail,
+      packageID: "",
+      isFeatured: false,
+    },
+  });
 
-    // Document requirements per subcategory (keys map to human labels below)
-    const categoryDocsMap = {
-        // Accommodation & Hospitality
-        Hotel: ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "HEALTH_SAFETY", "MANAGER_ID"],
-        Lodge: ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "HEALTH_SAFETY", "MANAGER_ID"],
-        "Serviced Apartment": ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "MANAGER_ID"],
-        "Airbnb & Homestay": ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "MANAGER_ID"],
-        // Food & Beverage
-        Restaurant: ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
-        Café: ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
-        "Nyama Choma Joint": ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
-        "Bar/Club/Lounge": ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
-        // Transport & Travel
-        "Taxi Operator": ["TRA_LICENSE", "VEHICLE_INSURANCE", "DRIVER_LICENSE", "BUSINESS_REGISTRATION"],
-        "Car Hire/Rental": ["TRA_LICENSE", "VEHICLE_INSURANCE", "DRIVER_LICENSE", "BUSINESS_REGISTRATION"],
-        "Shuttle Service": ["TRA_LICENSE", "VEHICLE_INSURANCE", "BUSINESS_REGISTRATION"],
-        "Tour/Safari Operator": ["TRA_LICENSE", "VEHICLE_INSURANCE", "BUSINESS_REGISTRATION"],
-        // Shopping & Services
-        "Shop/Boutique": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
-        "Mall/Market": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
-        "Beauty/Wellness": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
-        "Professional Service": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
-        // Events & Entertainment
-        "Event/Conference Centre": ["EVENT_PERMIT", "SOUND_LICENSE", "BUSINESS_REGISTRATION", "VENUE_IMAGES"],
-        "Entertainment Venue": ["EVENT_PERMIT", "SOUND_LICENSE", "BUSINESS_REGISTRATION", "VENUE_IMAGES"],
-        // Attractions & Experiences
-        "Park/Nature Reserve": ["BUSINESS_REGISTRATION", "PERMIT_IF_APPLICABLE", "PROOF_OF_LOCATION"],
-        "Cultural Centre/Art Gallery": ["BUSINESS_REGISTRATION", "PERMIT_IF_APPLICABLE", "PROOF_OF_LOCATION"],
-        "Event Organizer": ["BUSINESS_REGISTRATION", "EVENT_REFERENCES", "PROOF_OF_LOCATION"],
+  useEffect(() => {
+    setValue("email", initialEmail);
+  }, [initialEmail, setValue]);
+
+  /* ----------------------- Categories & documents ------------------------*/
+  // Fetch top-level categories on mount
+  useEffect(() => {
+    let active = true;
+    const fetchTop = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/category`);
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const json = await res.json();
+        if (!active) return;
+        setTopCategories(Array.isArray(json) ? json : []);
+      } catch (e) {
+        console.error("Error fetching top categories", e);
+        setTopCategories([]);
+      }
     };
-
-    // user-facing labels for doc keys
-    const docLabels = {
-        BUSINESS_REGISTRATION: "Business Registration Certificate / Certificate of Incorporation",
-        COUNTY_PERMIT: "County Business Permit (Nakuru County)",
-        HEALTH_SAFETY: "Fire & Health Safety Certificate",
-        MANAGER_ID: "Manager / Director ID / Passport",
-        FOOD_HYGIENE: "Food Hygiene Certificate",
-        MENU_SAMPLE: "Menu Sample",
-        TRA_LICENSE: "Tourism License (TRA)",
-        VEHICLE_INSURANCE: "Vehicle Insurance",
-        DRIVER_LICENSE: "Driver's License",
-        TRADING_LICENSE: "Trading / Business License",
-        PROOF_OF_LOCATION: "Proof of Location (utility bill, lease, title deed)",
-        EVENT_PERMIT: "Event Permit (if applicable)",
-        SOUND_LICENSE: "Sound / DJ License (if applicable)",
-        VENUE_IMAGES: "Venue Images",
-        PERMIT_IF_APPLICABLE: "Relevant Permit (if applicable)",
-        EVENT_REFERENCES: "Past Event References",
+    fetchTop();
+    return () => {
+      active = false;
     };
+  }, []);
 
-
-    // Fetch packages dynamically from DB
-useEffect(() => {
-let active = true;
-const fetchPackages = async () => {
-try {
-const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/packages/fpackage`);
-if (!res.ok) throw new Error("Failed to fetch packages");
-const json = await res.json();
-if (!active) return;
-// Normalize packages: ensure PackageID is string for radio values
-const normalized = (Array.isArray(json) ? json : []).map(p => ({
-PackageID: String(p.PackageID),
-PackageName: p.PackageName,
-PackagePrice: p.PackagePrice,
-Description: p.Description,
-DurationInDays: parseInt(p.DurationInDays?.toString?.() ?? 0),
-// If your backend returns features array add it here; otherwise keep empty
-Features: p.Features || []
-}));
-setPackages(normalized);
-} catch (e) {
-console.error("Error fetching packages", e);
-setPackages([]);
-}
-};
-fetchPackages();
-return () => { active = false; };
-}, []);
-
-    /* ------------------------- File validation helpers ------------------------- */
-    const isValidFile = (file, allowVideo = false) => {
-        if (!file) return false;
-        const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
-        if (allowVideo) allowed.push("video/mp4");
-        return allowed.includes(file.type);
+  // When category (parent) changes, fetch its subcategories
+  useEffect(() => {
+    const parentId = watch("category");
+    if (!parentId) {
+      setSubCategories([]);
+      return;
+    }
+    let active = true;
+    const fetchSub = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/categories/admin/subcategory?parentId=${parentId}`);
+        if (!res.ok) throw new Error("Failed to fetch subcategories");
+        const json = await res.json();
+        if (!active) return;
+        setSubCategories(Array.isArray(json) ? json : []);
+      } catch (e) {
+        console.error("Error fetching subcategories", e);
+        setSubCategories([]);
+      }
     };
-
-    /* ---------------------------------- Clear documents automatically if category changed (preserve values when user navigates back) ---------------------------------- */
-    const currentCategory = watch("category");
-    const [prevCategory, setPrevCategory] = useState(currentCategory);
-
-    useEffect(() => {
-        if (prevCategory === undefined) {
-            setPrevCategory(currentCategory);
-            return;
-        }
-        if (prevCategory && currentCategory && prevCategory !== currentCategory) {
-            setDocuments({});
-            setDocumentPreviews({});
-            Object.keys(docLabels).forEach((k) => {
-                try {
-                    clearErrors(`documents.${k}`);
-                } catch (e) { }
-            });
-        }
-        setPrevCategory(currentCategory);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentCategory]);
-
-    /* ------------------------- Step 2: doc handlers ------------------------- */
-    const handleFileChange = useCallback(
-        (docKey, file) => {
-            if (!file) return;
-            if (!isValidFile(file)) {
-                setError(`documents.${docKey}`, { type: "manual", message: "Only PDF/JPG/PNG allowed" });
-                return;
-            }
-            clearErrors(`documents.${docKey}`);
-            setDocuments((p) => ({ ...p, [docKey]: file }));
-            setDocumentPreviews((p) => ({
-                ...p,
-                [docKey]: file.type === "application/pdf" ? file.name : URL.createObjectURL(file),
-            }));
-            setServerError(null);
-        },
-        [setError, clearErrors]
-    );
-
-    const handleRemoveDoc = (docKey) => {
-        setDocuments((p) => {
-            const next = { ...p };
-            delete next[docKey];
-            return next;
-        });
-        setDocumentPreviews((p) => {
-            const next = { ...p };
-            delete next[docKey];
-            return next;
-        });
-        clearErrors(`documents.${docKey}`);
+    fetchSub();
+    return () => {
+      active = false;
     };
+  }, [watch("category")]);
 
-    /* ------------------------- Step 4: media handlers ------------------------- */
-    const handlePhotoChange = (fileList) => {
-        const arr = Array.from(fileList || []);
-        const valid = arr.filter((f) => isValidFile(f));
-        if (valid.length !== arr.length) {
-            setServerError("Some files were ignored — only JPG/PNG allowed");
-        } else {
-            setServerError(null);
-        }
-        setMedia((p) => ({ ...p, photos: valid }));
-        setMediaPreviews((p) => ({ ...p, photos: valid.map((f) => URL.createObjectURL(f)) }));
-        clearErrors("media.photos");
+  // Document requirements per subcategory (keys map to human labels below)
+  const categoryDocsMap = {
+    // Accommodation & Hospitality
+    Hotel: ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "HEALTH_SAFETY", "MANAGER_ID"],
+    Lodge: ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "HEALTH_SAFETY", "MANAGER_ID"],
+    "Serviced Apartment": ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "MANAGER_ID"],
+    "Airbnb & Homestay": ["BUSINESS_REGISTRATION", "COUNTY_PERMIT", "MANAGER_ID"],
+    // Food & Beverage
+    Restaurant: ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
+    Café: ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
+    "Nyama Choma Joint": ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
+    "Bar/Club/Lounge": ["FOOD_HYGIENE", "COUNTY_PERMIT", "MENU_SAMPLE", "MANAGER_ID"],
+    // Transport & Travel
+    "Taxi Operator": ["TRA_LICENSE", "VEHICLE_INSURANCE", "DRIVER_LICENSE", "BUSINESS_REGISTRATION"],
+    "Car Hire/Rental": ["TRA_LICENSE", "VEHICLE_INSURANCE", "DRIVER_LICENSE", "BUSINESS_REGISTRATION"],
+    "Shuttle Service": ["TRA_LICENSE", "VEHICLE_INSURANCE", "BUSINESS_REGISTRATION"],
+    "Tour/Safari Operator": ["TRA_LICENSE", "VEHICLE_INSURANCE", "BUSINESS_REGISTRATION"],
+    // Shopping & Services
+    "Shop/Boutique": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
+    "Mall/Market": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
+    "Beauty/Wellness": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
+    "Professional Service": ["BUSINESS_REGISTRATION", "TRADING_LICENSE", "PROOF_OF_LOCATION"],
+    // Events & Entertainment
+    "Event/Conference Centre": ["EVENT_PERMIT", "SOUND_LICENSE", "BUSINESS_REGISTRATION", "VENUE_IMAGES"],
+    "Entertainment Venue": ["EVENT_PERMIT", "SOUND_LICENSE", "BUSINESS_REGISTRATION", "VENUE_IMAGES"],
+    // Attractions & Experiences
+    "Park/Nature Reserve": ["BUSINESS_REGISTRATION", "PERMIT_IF_APPLICABLE", "PROOF_OF_LOCATION"],
+    "Cultural Centre/Art Gallery": ["BUSINESS_REGISTRATION", "PERMIT_IF_APPLICABLE", "PROOF_OF_LOCATION"],
+    "Event Organizer": ["BUSINESS_REGISTRATION", "EVENT_REFERENCES", "PROOF_OF_LOCATION"],
+  };
+
+  // user-facing labels for doc keys
+  const docLabels = {
+    BUSINESS_REGISTRATION: "Business Registration Certificate / Certificate of Incorporation",
+    COUNTY_PERMIT: "County Business Permit (Nakuru County)",
+    HEALTH_SAFETY: "Fire & Health Safety Certificate",
+    MANAGER_ID: "Manager / Director ID / Passport",
+    FOOD_HYGIENE: "Food Hygiene Certificate",
+    MENU_SAMPLE: "Menu Sample",
+    TRA_LICENSE: "Tourism License (TRA)",
+    VEHICLE_INSURANCE: "Vehicle Insurance",
+    DRIVER_LICENSE: "Driver's License",
+    TRADING_LICENSE: "Trading / Business License",
+    PROOF_OF_LOCATION: "Proof of Location (utility bill, lease, title deed)",
+    EVENT_PERMIT: "Event Permit (if applicable)",
+    SOUND_LICENSE: "Sound / DJ License (if applicable)",
+    VENUE_IMAGES: "Venue Images",
+    PERMIT_IF_APPLICABLE: "Relevant Permit (if applicable)",
+    EVENT_REFERENCES: "Past Event References",
+  };
+
+  // Fetch packages dynamically from DB
+  useEffect(() => {
+    let active = true;
+    const fetchPackages = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/admin/packages/fpackage`);
+        if (!res.ok) throw new Error("Failed to fetch packages");
+        const json = await res.json();
+        if (!active) return;
+        const normalized = (Array.isArray(json) ? json : []).map((p) => ({
+          PackageID: String(p.PackageID),
+          PackageName: p.PackageName,
+          PackagePrice: p.PackagePrice,
+          Description: p.Description,
+          DurationInDays: parseInt(p.DurationInDays?.toString?.() ?? 0),
+          Features: p.Features || [],
+        }));
+        setPackages(normalized);
+      } catch (e) {
+        console.error("Error fetching packages", e);
+        setPackages([]);
+      }
     };
-
-    const handleRemovePhoto = (index) => {
-        setMedia((p) => ({ ...p, photos: p.photos.filter((_, i) => i !== index) }));
-        setMediaPreviews((p) => ({ ...p, photos: p.photos.filter((_, i) => i !== index) }));
-        clearErrors("media.photos");
+    fetchPackages();
+    return () => {
+      active = false;
     };
+  }, []);
 
-    const handleVideoChange = (file) => {
-        if (!file) return;
-        if (!isValidFile(file, true)) {
-            setError("media.video", { type: "manual", message: "Only MP4 allowed" });
-            return;
-        }
-        clearErrors("media.video");
-        setMedia((p) => ({ ...p, video: file }));
-        setMediaPreviews((p) => ({ ...p, video: URL.createObjectURL(file) }));
-        setServerError(null);
-    };
+  /* ------------------------- File validation helpers ------------------------- */
+  const isValidFile = (file, allowVideo = false) => {
+    if (!file) return false;
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (allowVideo) allowed.push("video/mp4");
+    return allowed.includes(file.type);
+  };
 
-    const handleRemoveVideo = () => {
-        setMedia((p) => ({ ...p, video: null }));
-        setMediaPreviews((p) => ({ ...p, video: null }));
-        clearErrors("media.video");
-    };
+  /* ---------------------------------- Clear documents automatically if category changed (preserve values when user navigates back) ---------------------------------- */
+  const currentCategory = watch("category");
+  const [prevCategory, setPrevCategory] = useState(currentCategory);
 
-  // Watch the selected package ID to conditionally enable the 'isFeatured' toggle
-    const selectedPackageID = watch("packageID");
-    const selectedPackage = packages.find(pkg => pkg.PackageID === selectedPackageID);
-    //const canBeFeatured = selectedPackage?.PackageName.includes("Premium") || false; // Only Premium can be featured
-
-    /* ------------------------- Submit mutation ------------------------- */
-    const mutation = useMutation({
-        mutationFn: async (data) => {
-            const partnerApiUrl = `${apiUrl}`; // Use apiUrl prop if passed, otherwise default is used implicitly in the original code's structure
-            const formData = new FormData();
-
-            // 🟢 Map frontend -> backend field names
-           formData.append("BusinessName", data.businessName || "");
-  formData.append("ContactPerson", data.contactPerson || "");
-  // include email (hidden / read-only in UI)
-  formData.append("Email", data.email || LOGGED_IN_USER_EMAIL || "");
-  formData.append("Phone", data.phone || "");
-  // send IDs: category and subcategory are numeric IDs in selects
-  formData.append("CategoryID", data.category || "");
-  formData.append("SubcategoryID", data.subcategory || "");
-  formData.append("PhysicalAddress", data.physicalAddress || "");
-  formData.append("MapLink", data.mapLink || "");
-  formData.append("ShortDescription", data.shortDescription || "");
-  formData.append("OperatingHours", data.operatingHours || "");
-  formData.append("FullDescription", data.fullDescription || "");
-  formData.append("recaptchaToken", data.recaptchaToken || "");
-
-  // social
-  formData.append("Website", data.Website || "");
-  formData.append("WhatsAppNumber", data.WhatsAppNumber || "");
-  formData.append("FacebookLink", data.FacebookLink || "");
-  formData.append("XLink", data.XLink || "");
-  formData.append("InstagramLink", data.InstagramLink || "");
-
-  // agreement fields
-  formData.append("AgreementText", AGREEMENT_TEXT);
-  formData.append("agreementAcknowledged", data.agreementAcknowledged ? "true" : "false");
-  formData.append("acknowledgementDate", data.acknowledgementDate || "");
-  formData.append("acknowledgementSignature", data.acknowledgementSignature || "");
-  formData.append("acknowledgementStaffName", data.acknowledgementStaffName || "");
-  formData.append("acknowledgementPosition", data.acknowledgementPosition || "");
-  formData.append("companyNameAcknowledgement", data.companyNameAcknowledgement || "");
-  formData.append("kenyanIdNo", data.kenyanIdNo || "");
-
-  // subscription
-  formData.append("PackageID", data.packageID || "");
-  formData.append("IsFeatured", data.isFeatured ? "true" : "false");
-            
-            // 🟢 Append documents (object form)
-            if (documents && typeof documents === "object") {
-                const seenDocs = new Set();
-                for (const [key, file] of Object.entries(documents)) {
-                    if (file instanceof File && !seenDocs.has(file.name)) {
-                        formData.append("documents", file, file.name);
-                        formData.append("documentLabels", key);
-                        seenDocs.add(file.name);
-                    }
-                }
-            }
-            
-            // 🟢 Append photos (avoid duplicates)
-            if (Array.isArray(media?.photos)) {
-                const seenPhotos = new Set();
-                media.photos.forEach((file) => {
-                    if (file instanceof File && !seenPhotos.has(file.name)) {
-                        formData.append("photos", file);
-                        seenPhotos.add(file.name);
-                    }
-                });
-            }
-            
-            // 🟢 Append single video
-            if (media?.video instanceof File) {
-                formData.append("videos", media.video);
-            }
-
-            const res = await fetch(partnerApiUrl, {
-                method: "POST",
-                headers: {
-                    // Send the token received from the parent component
-                    // This is required by your backend's auth middleware (authUser)
-                    'x-auth-token': userAuthToken,
-                },
-                body: formData,
-            });
-
-            if (!res.ok) {
-                const txt = await res.text().catch(() => null);
-                throw new Error(txt || `HTTP ${res.status}`);
-            }
-
-            return res.json();
-        },
-        onSuccess: () => {
-            setIsSubmitting(false); // Clear local submitting state
-            setIsSuccessPage(true);
-        },
-        onError: (err) => {
-            setIsSubmitting(false); // Clear local submitting state
-            setServerError(err?.message || "Submission failed");
-        },
-    });
-
-    const onFinalSubmit = async (data) => {
-        // This function is only called on the final step's submit button press.
-        if (isSubmitting || mutation.isPending) return;
-        setIsSubmitting(true);
-        setServerError(null);
-
-        if (!executeRecaptcha) {
-            setServerError("reCAPTCHA service not available. Please try again.");
-            setIsSubmitting(false);
-            return;
-        }
-
+  useEffect(() => {
+    if (prevCategory === undefined) {
+      setPrevCategory(currentCategory);
+      return;
+    }
+    if (prevCategory && currentCategory && prevCategory !== currentCategory) {
+      setDocuments({});
+      setDocumentPreviews({});
+      Object.keys(docLabels).forEach((k) => {
         try {
-            // 1. Execute reCAPTCHA with a specific action name
-            const recaptchaToken = await executeRecaptcha("partnerRegistration");
+          clearErrors(`documents.${k}`);
+        } catch (e) {}
+      });
+    }
+    setPrevCategory(currentCategory);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCategory]);
 
-            if (!recaptchaToken) {
-                setServerError("reCAPTCHA verification failed. Cannot submit form.");
-                setIsSubmitting(false);
-                return;
-            }
+  /* ------------------------- Step 2: doc handlers ------------------------- */
+  const handleFileChange = useCallback(
+    (docKey, file) => {
+      if (!file) return;
+      if (!isValidFile(file)) {
+        setError(`documents.${docKey}`, { type: "manual", message: "Only PDF/JPG/PNG allowed" });
+        return;
+      }
+      clearErrors(`documents.${docKey}`);
+      // Save single file per docKey (keeping previous behavior), but do NOT dedupe by name at submission
+      setDocuments((p) => ({ ...p, [docKey]: file }));
+      setDocumentPreviews((p) => ({
+        ...p,
+        [docKey]: file.type === "application/pdf" ? file.name : URL.createObjectURL(file),
+      }));
+      setServerError(null);
+    },
+    [setError, clearErrors]
+  );
 
-            // 2. Call mutation with the combined data object
-            mutation.mutate({ ...data, recaptchaToken });
+  const handleRemoveDoc = (docKey) => {
+    setDocuments((p) => {
+      const next = { ...p };
+      delete next[docKey];
+      return next;
+    });
+    setDocumentPreviews((p) => {
+      const next = { ...p };
+      delete next[docKey];
+      return next;
+    });
+    clearErrors(`documents.${docKey}`);
+  };
 
-        } catch (error) {
-            console.error("reCAPTCHA/Submission error:", error);
-            setServerError("An internal error occurred during verification. Try again.");
-            setIsSubmitting(false);
-        }
-    };
-
-    /* ------------------------- Navigation & validation ------------------------- */
-    const nextStep = async () => {
-        setServerError(null);
-
-        // Step 1: validate registration fields
-        if (step === 1) {
-            const ok = await trigger(["category", "subcategory", "businessName", "contactPerson", "email", "phone"]);
-            if (!ok) return;
-            setStep(2);
-            return;
-        }
-
-        // Step 2: validate address/short description/operating hours + required documents
-        if (step === 2) {
-            const ok = await trigger(["physicalAddress", "mapLink", "shortDescription", "operatingHours"]);
-
-            const selectedSubcatId  = watch("subcategory");
-           const selectedSubcatObj = subCategories.find(s => String(s.CatId) === String(selectedSubcatId));
-  const selectedSubcatName = selectedSubcatObj?.CatName;
-  const requiredDocs = categoryDocsMap[selectedSubcatName] || [];
-  let docsOk = true;
-            for (const dk of requiredDocs) {
-                if (!documents[dk]) {
-                    setError(`documents.${dk}`, { type: "required", message: `${docLabels[dk]} is required` });
-                    docsOk = false;
-                } else {
-                    clearErrors(`documents.${dk}`);
-                }
-            }
-
-            if (!ok || !docsOk) {
-                setServerError("Please complete required fields and upload required documents.");
-                return;
-            }
-
-            setServerError(null);
-            setStep(3); 
-            return;
-        }
-        
-        // Step 3: Validate Agreement form fields
-        if (step === 3) {
-            const ok = await trigger([
-                "agreementAcknowledged",
-                "kenyanIdNo",
-                "companyNameAcknowledgement",
-                "acknowledgementSignature",
-                "acknowledgementStaffName",
-                "acknowledgementPosition",
-                "acknowledgementDate"
-            ]);
-            
-            if (!ok) {
-                setServerError("Please acknowledge the agreement and complete all signature fields.");
-                return;
-            }
-            
-            setServerError(null);
-            setStep(4);
-            return;
-        }
-
-        // Step 4: validate fullDescription & photos count
-        if (step === 4) {
-            const ok = await trigger(["fullDescription"]);
-            if (!ok) return;
-
-            if (!media.photos || media.photos.length < 3 || media.photos.length > 5) {
-                setError("media.photos", { type: "manual", message: "Upload between 3 and 5 photos" });
-                setServerError("Please upload between 3 and 5 photos.");
-                return;
-            }
-            clearErrors("media.photos");
-            setServerError(null);
-            setStep(5); // Move to Step 5 (Packages)
-            return;
-        }
-        
-        // Step 5: Validate package selection
-        if (step === 5) {
-            const ok = await trigger(["packageID"]);
-            if (!ok) {
-                setServerError("Please select a package to proceed.");
-                return;
-            }
-            setServerError(null);
-            setStep(6); // Move to Step 6 (Review)
-            return;
-        }
-
-        // Step 6: Review - no validation needed here, just leads to submit
-        if (step === 6) {
-            // The submit button handles the final submission logic
-            return;
-        }
-    };
-
-    const prevStep = () => {
-        setServerError(null);
-        setStep((s) => Math.max(1, s - 1));
-    };
-
-    /* ------------------------- Success screen ------------------------- */
-    if (isSuccessPage) {
-        return (
-            <div className="bg-gray-100 min-h-screen flex items-center justify-center">
-                <div className="p-8 bg-white rounded-lg shadow-lg text-center">
-                    <h1 className="text-2xl font-bold text-green-600">🎉 Registration Successful!</h1>
-                    <p className="mt-4 text-gray-700">Your business onboarding has been completed. We will review it shortly.</p>
-                     <a href="/business/register"className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition ml-auto"> List My Business</a>
-                </div>
-            </div>
-        );
+  /* ------------------------- Step 4: media handlers ------------------------- */
+  const handlePhotoChange = (fileList) => {
+    const arr = Array.from(fileList || []);
+    const valid = arr.filter((f) => {
+      return f && (f.type === "image/jpeg" || f.type === "image/png" || f.type === "image/jpg");
+    });
+    if (valid.length !== arr.length) {
+      setServerError("Some files were ignored — only JPG/PNG allowed");
+    } else {
+      setServerError(null);
     }
 
-    const progressWidth = `${(step / totalSteps) * 100}%`;
+    // Append new photos to existing photos (preserve previous selections)
+    setMedia((prev) => {
+      const combined = [...prev.photos, ...valid];
+      // optionally enforce max cap here (we keep final validation at step navigation but also cap previews to 10 to avoid huge lists)
+      if (combined.length > 10) combined.splice(10); // internal safeguard; step validation enforces 3-5
+      return { ...prev, photos: combined };
+    });
 
-    /* ------------------------- Tailwind input style used everywhere Add per-field error red border by checking errors[name] ------------------------- */
-    const baseInputClass = "w-full border px-4 py-2 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary";
-    const getInputClass = (fieldName) => `${baseInputClass} ${errors[fieldName] || (errors.documents && errors.documents[fieldName]) ? "border-red-500" : "border-gray-300"}`;
-    
-    // Helper for agreement form fields (which might use different names)
-    const getAgreementInputClass = (fieldName) => `${baseInputClass} ${errors[fieldName] ? "border-red-500" : "border-gray-300"}`;
+    setMediaPreviews((prev) => {
+      const newPreviews = valid.map((f) => URL.createObjectURL(f));
+      const combinedPreviews = [...prev.photos, ...newPreviews];
+      if (combinedPreviews.length > 10) combinedPreviews.splice(10);
+      return { ...prev, photos: combinedPreviews };
+    });
 
+    clearErrors("media.photos");
+  };
+
+  const handleRemovePhoto = (index) => {
+    setMedia((p) => ({ ...p, photos: p.photos.filter((_, i) => i !== index) }));
+    setMediaPreviews((p) => ({ ...p, photos: p.photos.filter((_, i) => i !== index) }));
+    clearErrors("media.photos");
+  };
+
+  const handleVideoChange = (file) => {
+    if (!file) return;
+    if (!isValidFile(file, true)) {
+      setError("media.video", { type: "manual", message: "Only MP4 allowed" });
+      return;
+    }
+    clearErrors("media.video");
+    setMedia((p) => ({ ...p, video: file }));
+    setMediaPreviews((p) => ({ ...p, video: URL.createObjectURL(file) }));
+    setServerError(null);
+  };
+
+  const handleRemoveVideo = () => {
+    setMedia((p) => ({ ...p, video: null }));
+    setMediaPreviews((p) => ({ ...p, video: null }));
+    clearErrors("media.video");
+  };
+
+  // Watch the selected package ID to conditionally enable the 'isFeatured' toggle
+  const selectedPackageID = watch("packageID");
+  const selectedPackage = packages.find((pkg) => pkg.PackageID === selectedPackageID);
+
+  /* ------------------------- Submit mutation ------------------------- */
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+      const partnerApiUrl = `${apiUrl}`;
+      const formData = new FormData();
+
+      // 🟢 Map frontend -> backend field names
+      formData.append("BusinessName", data.businessName || "");
+      formData.append("ContactPerson", data.contactPerson || "");
+      formData.append("Email", data.email || initialEmail || "");
+      formData.append("Phone", data.phone || "");
+      formData.append("CategoryID", data.category || "");
+      formData.append("SubcategoryID", data.subcategory || "");
+      formData.append("PhysicalAddress", data.physicalAddress || "");
+      formData.append("MapLink", data.mapLink || "");
+      formData.append("ShortDescription", data.shortDescription || "");
+      formData.append("OperatingHours", data.operatingHours || "");
+      formData.append("FullDescription", data.fullDescription || "");
+      formData.append("recaptchaToken", data.recaptchaToken || "");
+
+      // social
+      formData.append("Website", data.Website || "");
+      formData.append("WhatsAppNumber", data.WhatsAppNumber || "");
+      formData.append("FacebookLink", data.FacebookLink || "");
+      formData.append("XLink", data.XLink || "");
+      formData.append("InstagramLink", data.InstagramLink || "");
+
+      // agreement fields
+      formData.append("AgreementText", AGREEMENT_TEXT);
+      formData.append("agreementAcknowledged", data.agreementAcknowledged ? "true" : "false");
+      formData.append("acknowledgementDate", data.acknowledgementDate || "");
+      formData.append("acknowledgementSignature", data.acknowledgementSignature || "");
+      formData.append("acknowledgementStaffName", data.acknowledgementStaffName || "");
+      formData.append("acknowledgementPosition", data.acknowledgementPosition || "");
+      formData.append("companyNameAcknowledgement", data.companyNameAcknowledgement || "");
+      formData.append("kenyanIdNo", data.kenyanIdNo || "");
+
+      // subscription
+      formData.append("PackageID", data.packageID || "");
+      formData.append("IsFeatured", data.isFeatured ? "true" : "false");
+
+      // 🟢 Append documents (object form)
+      if (documents && typeof documents === "object") {
+        for (const [key, file] of Object.entries(documents)) {
+          if (file instanceof File) {
+            formData.append("documents", file, file.name);
+            // Append the corresponding doc key/label for each file
+            formData.append("documentLabels", key);
+          }
+        }
+      }
+
+      // 🟢 Append photos (allow same name files - do NOT dedupe by name)
+      if (Array.isArray(media?.photos)) {
+        media.photos.forEach((file) => {
+          if (file instanceof File) {
+            formData.append("photos", file);
+          }
+        });
+      }
+
+      // 🟢 Append single video
+      if (media?.video instanceof File) {
+        formData.append("videos", media.video);
+      }
+
+      const res = await fetch(partnerApiUrl, {
+        method: "POST",
+        headers: {
+          'x-auth-token': userAuthToken,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => null);
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsSubmitting(false);
+      setIsSuccessPage(true);
+    },
+    onError: (err) => {
+      setIsSubmitting(false);
+      setServerError(err?.message || "Submission failed");
+    },
+  });
+
+  const onFinalSubmit = async (data) => {
+    if (isSubmitting || mutation.isPending) return;
+    setIsSubmitting(true);
+    setServerError(null);
+
+    if (!executeRecaptcha) {
+      setServerError("reCAPTCHA service not available. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const recaptchaToken = await executeRecaptcha("partnerRegistration");
+
+      if (!recaptchaToken) {
+        setServerError("reCAPTCHA verification failed. Cannot submit form.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      mutation.mutate({ ...data, recaptchaToken });
+    } catch (error) {
+      console.error("reCAPTCHA/Submission error:", error);
+      setServerError("An internal error occurred during verification. Try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  /* ------------------------- Navigation & validation ------------------------- */
+
+  const nextStep = async () => {
+    setServerError(null);
+
+    // Step 1: validate registration fields (including WhatsApp now)
+    if (step === 1) {
+      const ok = await trigger(["category", "subcategory", "businessName", "contactPerson", "email", "phone", "WhatsAppNumber"]);
+      if (!ok) return;
+      setStep(2);
+      return;
+    }
+
+    // Step 2: validate address/short description/operating hours + required documents
+    if (step === 2) {
+      const ok = await trigger(["physicalAddress", "mapLink", "shortDescription", "operatingHours"]);
+
+      const selectedSubcatId = watch("subcategory");
+      const selectedSubcatObj = subCategories.find((s) => String(s.CatId) === String(selectedSubcatId));
+      const selectedSubcatName = selectedSubcatObj?.CatName;
+      const requiredDocs = categoryDocsMap[selectedSubcatName] || [];
+      let docsOk = true;
+      for (const dk of requiredDocs) {
+        if (!documents[dk]) {
+          setError(`documents.${dk}`, { type: "required", message: `${docLabels[dk]} is required` });
+          docsOk = false;
+        } else {
+          clearErrors(`documents.${dk}`);
+        }
+      }
+
+      if (!ok || !docsOk) {
+        setServerError("Please complete required fields and upload required documents.");
+        return;
+      }
+
+      setServerError(null);
+      setStep(3);
+      return;
+    }
+
+    // Step 3: Validate Agreement form fields
+    if (step === 3) {
+      const ok = await trigger([
+        "agreementAcknowledged",
+        "kenyanIdNo",
+        "companyNameAcknowledgement",
+        "acknowledgementSignature",
+        "acknowledgementStaffName",
+        "acknowledgementPosition",
+        "acknowledgementDate",
+      ]);
+
+      if (!ok) {
+        setServerError("Please acknowledge the agreement and complete all signature fields.");
+        return;
+      }
+
+      setServerError(null);
+      setStep(4);
+      return;
+    }
+
+    // Step 4: validate fullDescription & photos count
+    if (step === 4) {
+      const ok = await trigger(["fullDescription"]);
+      if (!ok) return;
+
+      if (!media.photos || media.photos.length < 3 || media.photos.length > 5) {
+        setError("media.photos", { type: "manual", message: "Upload between 3 and 5 photos" });
+        setServerError("Please upload between 3 and 5 photos.");
+        return;
+      }
+      clearErrors("media.photos");
+      setServerError(null);
+      setStep(5); // Move to Step 5 (Packages)
+      return;
+    }
+
+    // Step 5: Validate package selection
+    if (step === 5) {
+      const ok = await trigger(["packageID"]);
+      if (!ok) {
+        setServerError("Please select a package to proceed.");
+        return;
+      }
+      setServerError(null);
+      setStep(6); // Move to Step 6 (Review)
+      return;
+    }
+
+    // Step 6: Review - no validation needed here, just leads to submit
+    if (step === 6) {
+      return;
+    }
+  };
+
+  const prevStep = () => {
+    setServerError(null);
+    setStep((s) => Math.max(1, s - 1));
+  };
+
+  /* ------------------------- Success screen ------------------------- */
+  if (isSuccessPage) {
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-6">
-            <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
-                {/* Header */}
-                <div className="bg-primary text-white text-center py-6">
-                    <h1 className="h3 font-bold">Business Onboarding</h1>
-                    <p className="text-white text-sm mt-1">Step {step} of {totalSteps}</p>
-                    <div className="w-3/4 h-2 bg-border rounded-full mx-auto mt-2">
-                        <div style={{ width: progressWidth }} className="h-full bg-white transition-all duration-300" />
-                    </div>
-                </div>
-                
-                <div className="p-8">
-                    <form onSubmit={handleSubmit(onFinalSubmit)} className="space-y-6">
-                        {/* STEP 1: Registration */}
-                        {step === 1 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 1: Business Details</h2>
-                                
-                                {/* Category */}
-                                <div>
-                                    <label className="font-bold block mb-1">Category</label>
-                                    <select {...register("category", { required: "Category is required" })} className={getInputClass("category")}>
-                <option value="">Select Category</option>
-                {topCategories.map(c => (
-                  <option key={c.CatId} value={c.CatId}>{c.CatName}</option>
-                ))}
-              </select>
-              {errors.category && (<p className="text-sm text-red-600 mt-1">{errors.category.message}</p>)}
-                                </div>
-                                
-                                {/* Subcategory (Conditional) */}
-                                <div>
-                                    {watch("category") && (
-                                        <>
-                                            <label className="font-bold block mb-1">Sub Category</label>
-                                            <select {...register("subcategory", { required: "Sub Category is required" })} className={getInputClass("subcategory")}>
-                    <option value="">Select Subcategory</option>
-                    {subCategories.map(s => (
-                      <option key={s.CatId} value={s.CatId}>{s.CatName}</option>
+      <div className="bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="p-8 bg-white rounded-lg shadow-lg text-center">
+          <h1 className="text-2xl font-bold text-green-600">🎉 Registration Successful!</h1>
+          <p className="mt-4 text-gray-700">Your business onboarding has been completed. We will review it shortly.</p>
+          <a href="/business/register" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition ml-auto">
+            List My Business
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const progressWidth = `${(step / totalSteps) * 100}%`;
+
+  /* ------------------------- Tailwind input style used everywhere Add per-field error red border by checking errors[name] ------------------------- */
+  const baseInputClass = "w-full border px-4 py-2 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary";
+  const getInputClass = (fieldName) =>
+    `${baseInputClass} ${errors[fieldName] || (errors.documents && errors.documents[fieldName]) ? "border-red-500" : "border-gray-300"}`;
+
+  const getAgreementInputClass = (fieldName) => `${baseInputClass} ${errors[fieldName] ? "border-red-500" : "border-gray-300"}`;
+
+  // Patterns for validations
+  const patterns = {
+    e164: {
+      value: /^\+[1-9]\d{7,14}$/,
+      message: "Enter a valid international number in E.164 format, e.g., +254712345678",
+    },
+    website: {
+      // basic URL pattern (allows http(s) optional)
+      value: /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(:\d+)?(\/\S*)?$/i,
+      message: "Enter a valid website URL (include https:// is recommended).",
+    },
+    facebook: {
+      value: /^(https?:\/\/)?(www\.)?facebook\.com\/.+$/i,
+      message: "Enter a valid Facebook page URL (e.g., https://facebook.com/yourpage).",
+    },
+    instagram: {
+      value: /^(https?:\/\/)?(www\.)?instagram\.com\/.+$/i,
+      message: "Enter a valid Instagram URL (e.g., https://instagram.com/yourhandle).",
+    },
+    xlink: {
+      value: /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\/.+$/i,
+      message: "Enter a valid X/Twitter URL (e.g., https://x.com/yourhandle).",
+    },
+    googleMaps: {
+      value: /^(https?:\/\/)?(www\.)?google\.[a-z.]+\/maps\/.*$/i,
+      message: "Enter a valid Google Maps URL (e.g., https://www.google.com/maps/...).",
+    },
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-6">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-primary text-white text-center py-6">
+          <h1 className="h3 font-bold">Business Onboarding</h1>
+          <p className="text-white text-sm mt-1">
+            Step {step} of {totalSteps}
+          </p>
+          <div className="w-3/4 h-2 bg-border rounded-full mx-auto mt-2">
+            <div style={{ width: progressWidth }} className="h-full bg-white transition-all duration-300" />
+          </div>
+        </div>
+
+        <div className="p-8">
+          <form onSubmit={handleSubmit(onFinalSubmit)} className="space-y-6">
+            {/* STEP 1: Registration */}
+            {step === 1 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 1: Business Details</h2>
+
+                {/* Category */}
+                <div>
+                  <label className="font-bold block mb-1">Category</label>
+                  <select {...register("category", { required: "Category is required" })} className={getInputClass("category")}>
+                    <option value="">Select Category</option>
+                    {topCategories.map((c) => (
+                      <option key={c.CatId} value={c.CatId}>
+                        {c.CatName}
+                      </option>
                     ))}
                   </select>
-                  {errors.subcategory && (<p className="text-sm text-red-600 mt-1">{errors.subcategory.message}</p>)}
-                                        </>
-                                    )}
-                                </div>
-                                
-                               
-                                
-                                {/* Business Name */}
-                                <div>
-                                    <label className="font-bold block mb-1">Business Name</label>
-                                    <input {...register("businessName", { required: "Business Name is required" })} className={getInputClass("businessName")} />
-                                    {errors.businessName && ( <p className="text-sm text-red-600 mt-1">{errors.businessName.message}</p> )}
-                                </div>
-                                
-                                {/* Contact Person */}
-                                <div>
-                                    <label className="font-bold block mb-1">Contact Person</label>
-                                    <input {...register("contactPerson", { required: "Contact Person is required" })} className={getInputClass("contactPerson")} />
-                                    {errors.contactPerson && ( <p className="text-sm text-red-600 mt-1">{errors.contactPerson.message}</p> )}
-                                </div>
-                                
-                                {/* Email (Read-only as per request) */}
-                                <div>
-                                    <label className="font-bold block mb-1">Email</label>
-                                    <input type="email" readOnly className={`${getInputClass("email")} bg-gray-100 cursor-not-allowed`} value={initialEmail} />
-                                </div>
-                                
-                                {/* Phone */}
-                                <div>
-                                    <label className="font-bold block mb-1">Phone</label>
-                                    <input type="tel" {...register("phone", { 
-                                        required: "Phone number is required", 
-                                        pattern: { value: /^[0-9]{10}$/, message: "Phone number must be 10 digits", },
-                                    })} className={getInputClass("phone")} />
-                                    {errors.phone && ( <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p> )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 2: Documents & Location */}
-                        {step === 2 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 2: Documents & Location</h2>
-                                
-                                {/* Document Uploads */}
-                                {(() => {
-              const selectedSubcatId = watch("subcategory");
-              const selectedSubcatObj = subCategories.find(s => String(s.CatId) === String(selectedSubcatId));
-              const selectedSubcatName = selectedSubcatObj?.CatName;
-              const requiredDocs = categoryDocsMap[selectedSubcatName] || [];
-
-              if (!selectedSubcatId) {
-                return <p className="text-gray-600">Please select a Category & Subcategory on Step 1 first.</p>;
-              }
-              if (requiredDocs.length === 0) {
-                return <p className="text-gray-600">No specific documents are defined for this subcategory.</p>;
-              }
-
-              return (
-                <>
-                  <p className="font-bold text-md mb-2">Required Documents</p>
-                  {requiredDocs.map((dk) => (
-                    <div key={dk} className="mb-4">
-                      <label className="font-bold block mb-1">{docLabels[dk] || dk}</label>
-                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files?.[0]; handleFileChange(dk, file); }}
-                        onClick={() => document.getElementById(`doc-${dk}`)?.click()}
-                        className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${errors.documents?.[dk] ? "border-red-500 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"} `}
-                      >
-                        <p className={`text-gray-600 ${errors.documents?.[dk] ? "text-red-600" : ""}`}>Drag &amp; Drop or Click to Upload</p>
-                        <p className="text-xs text-gray-500 mt-1">Allowed: PDF, JPG, PNG</p>
-                        <input id={`doc-${dk}`} type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => handleFileChange(dk, e.target.files?.[0])} />
-                      </div>
-                      {errors.documents?.[dk] && <p className="text-sm text-red-600 mt-2">{errors.documents[dk].message}</p>}
-                      {documentPreviews[dk] && (
-                        <div className="mt-2 flex items-center gap-2">
-                          {String(documentPreviews[dk]).toLowerCase().endsWith(".pdf") ? (
-                            <p className="text-gray-700">📄 {documentPreviews[dk]}</p>
-                          ) : (
-                            <img src={documentPreviews[dk]} alt="preview" className={`h-20 w-20 object-cover rounded border ${errors.documents?.[dk] ? "border-red-500" : "border-gray-200"}`} />
-                          )}
-                          <button type="button" onClick={() => handleRemoveDoc(dk)} className="text-red-500 text-sm hover:underline">Remove</button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
-                               
-                                
-                                <p className="font-bold text-md mb-2">Location & Contact Details</p>
-
-                                {/* Physical Address */}
-                                <div>
-                                    <label className="font-bold block mb-1">Physical Address</label>
-                                    <input {...register("physicalAddress", { required: "Physical address is required" })} className={getInputClass("physicalAddress")} />
-                                    {errors.physicalAddress && <p className="text-sm text-red-600 mt-1">{errors.physicalAddress.message}</p>}
-                                </div>
-                                
-                                {/* Google Map Link */}
-                                <div>
-                                    <label className="font-bold block mb-1">Google Map Link</label>
-                                    <input {...register("mapLink", { required: "Google Map link is required" })} className={getInputClass("mapLink")} />
-                                    {errors.mapLink && <p className="text-sm text-red-600 mt-1">{errors.mapLink.message}</p>}
-                                </div>
-                                
-                                {/* Short Description */}
-                                <div>
-                                    <label className="font-bold block mb-1">Short Description</label>
-                                    <textarea {...register("shortDescription", { required: "Short description is required" })} rows={3} className={getInputClass("shortDescription")} />
-                                    {errors.shortDescription && <p className="text-sm text-red-600 mt-1">{errors.shortDescription.message}</p>}
-                                </div>
-                                
-                                {/* Operating Hours */}
-                                <div>
-                                    <label className="font-bold block mb-1">Operating Hours</label>
-                                    <input {...register("operatingHours", { required: "Operating hours are required" })} className={getInputClass("operatingHours")} />
-                                    {errors.operatingHours && <p className="text-sm text-red-600 mt-1">{errors.operatingHours.message}</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 3: Agreement Form */}
-                        {step === 3 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 3: Rules, Regulations & Code of Conduct for Partners </h2>
-                                
-                                {/* Agreement Text - Styled as requested */}
-                                <div className="border border-gray-300 rounded p-4 h-96 overflow-y-scroll bg-gray-50 text-sm">
-                                    <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed">
-                                        {AGREEMENT_TEXT}
-                                    </pre>
-                                </div>
-                                
-                              
-                                
-                                <p className="font-bold text-md mb-2">Social & Web Links (Optional)</p>
-                                
-                                {/* Website */}
-                                <div>
-                                    <label className="font-bold block mb-1">Website</label>
-                                    <input {...register("Website")} className={getInputClass("Website")} placeholder="e.g., https://www.yourbusiness.com" />
-                                </div>
-
-                                {/* WhatsAppNumber */}
-                                <div>
-                                    <label className="font-bold block mb-1">WhatsApp Number</label>
-                                    <input type="tel" {...register("WhatsAppNumber")} className={getInputClass("WhatsAppNumber")} placeholder="e.g., +254700123456" />
-                                </div>
-
-                                {/* FacebookLink */}
-                                <div>
-                                    <label className="font-bold block mb-1">Facebook Link</label>
-                                    <input {...register("FacebookLink")} className={getInputClass("FacebookLink")} placeholder="e.g., https://facebook.com/yourpage" />
-                                </div>
-                                
-                                {/* XLink (Twitter) */}
-                                <div>
-                                    <label className="font-bold block mb-1">X (Twitter) Link</label>
-                                    <input {...register("XLink")} className={getInputClass("XLink")} placeholder="e.g., https://x.com/yourhandle" />
-                                </div>
-                                
-                                {/* InstagramLink */}
-                                <div>
-                                    <label className="font-bold block mb-1">Instagram Link</label>
-                                    <input {...register("InstagramLink")} className={getInputClass("InstagramLink")} placeholder="e.g., https://instagram.com/yourhandle" />
-                                </div>
-                                
-                              
-
-                                {/* Agreement Acknowledgement */}
-                                <p className="font-bold text-md mb-2">Agreement Acknowledgement</p>
-                                <div className="space-y-3 p-4 border border-gray-300 rounded bg-white">
-                                    {/* Company Name (from agreement structure) */}
-                                    <div>
-                                        <label className="font-bold block mb-1">I, of Kenyan ID No:</label>
-                                        <input {...register("kenyanIdNo", { required: "Kenyan ID No is required" })} className={getAgreementInputClass("kenyanIdNo")} />
-                                        {errors.kenyanIdNo && <p className="text-sm text-red-600 mt-1">{errors.kenyanIdNo.message}</p>}
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="font-bold block mb-1">representing (Company Name):</label>
-                                        <input {...register("companyNameAcknowledgement", { required: "Company Name is required for acknowledgement" })} className={getAgreementInputClass("companyNameAcknowledgement")} />
-                                        {errors.companyNameAcknowledgement && <p className="text-sm text-red-600 mt-1">{errors.companyNameAcknowledgement.message}</p>}
-                                    </div>
-                                    
-                                    <p className="text-gray-700">
-                                        acknowledge that I have read, understood, and agree that our staff and employees agree to abide by the terms of this VisitNakuru.com – Rules, Regulations & Code of Conduct for Listed Partners.
-                                    </p>
-
-                                    {/* Signature Fields */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="font-bold block mb-1">Signed </label>
-                                            <input {...register("acknowledgementSignature", { required: "Signature/Name is required" })} className={getAgreementInputClass("acknowledgementSignature")} placeholder="Type your full name" />
-                                            {errors.acknowledgementSignature && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementSignature.message}</p>}
-                                        </div>
-                                        <div>
-                                            <label className="font-bold block mb-1">Staff Name</label>
-                                            <input {...register("acknowledgementStaffName", { required: "Staff Name is required" })} className={getAgreementInputClass("acknowledgementStaffName")} />
-                                            {errors.acknowledgementStaffName && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementStaffName.message}</p>}
-                                        </div>
-                                        <div>
-                                            <label className="font-bold block mb-1">Position</label>
-                                            <input {...register("acknowledgementPosition", { required: "Position is required" })} className={getAgreementInputClass("acknowledgementPosition")} />
-                                            {errors.acknowledgementPosition && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementPosition.message}</p>}
-                                        </div>
-                                        <div>
-                                            <label className="font-bold block mb-1">Date</label>
-                                            <input type="date" {...register("acknowledgementDate", { required: "Date is required" })} className={getAgreementInputClass("acknowledgementDate")} />
-                                            {errors.acknowledgementDate && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementDate.message}</p>}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Final Acknowledgment Checkbox */}
-                                    <div className="flex items-start mt-4">
-                                        <input type="checkbox" id="agreement-check" {...register("agreementAcknowledged", { required: "You must acknowledge the agreement" })} className={`mt-1 w-4 h-4 text-primary rounded ${errors.agreementAcknowledged ? 'border-red-500' : 'border-gray-300'}`} />
-                                        <label htmlFor="agreement-check" className="ml-2 text-sm text-gray-900 font-bold">I confirm I have reviewed and accepted the terms of this agreement.</label>
-                                    </div>
-                                    {errors.agreementAcknowledged && <p className="text-sm text-red-600 mt-1">{errors.agreementAcknowledged.message}</p>}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* STEP 4: Content Submission */}
-                        {step === 4 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 4: Content Submission</h2>
-                                
-                                {/* Full Description */}
-                                <div>
-                                    <label className="font-bold block mb-1">Full Description</label>
-                                    <textarea {...register("fullDescription", { required: "Full description is required" })} rows={6} className={getInputClass("fullDescription")} />
-                                    {errors.fullDescription && <p className="text-sm text-red-600 mt-1">{errors.fullDescription.message}</p>}
-                                </div>
-                                
-                                {/* Photos Upload */}
-                                <div>
-                                    <label className="font-bold block mb-1">Upload 3–5 Photos</label>
-                                    <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handlePhotoChange(e.dataTransfer.files); }}
-                                        onClick={() => document.getElementById("photos-input")?.click()}
-                                        className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${errors.media?.photos ? "border-red-500 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"} `}
-                                    >
-                                        <p className={`text-gray-600 ${errors.media?.photos ? "text-red-600" : ""}`}>Drag &amp; Drop photos here or Click to Upload</p>
-                                        <p className="text-xs text-gray-500 mt-1">Allowed: JPG, PNG (3–5 photos)</p>
-                                        <input id="photos-input" type="file" multiple accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(e.target.files)} />
-                                    </div>
-                                    {errors.media?.photos && <p className="text-sm text-red-600 mt-2">{errors.media.photos.message}</p>}
-                                    <div className="flex gap-2 mt-2 flex-wrap">
-                                        {mediaPreviews.photos.map((src, i) => (
-                                            <div key={i} className="relative">
-                                                <img src={src} alt={`photo-${i}`} className="h-24 w-24 object-cover rounded border border-gray-200" />
-                                                <button type="button" onClick={() => handleRemovePhoto(i)} className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-1">✕</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                
-                                {/* Video Upload */}
-                                <div>
-                                    <label className="font-bold block mt-3">Intro Video (Optional)</label>
-                                    <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleVideoChange(e.dataTransfer.files?.[0]); }}
-                                        onClick={() => document.getElementById("video-input")?.click()}
-                                        className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${errors.media?.video ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"} `}
-                                    >
-                                        <p className={`text-gray-600 ${errors.media?.video ? "text-red-600" : ""}`}>Drag &amp; Drop video here or Click to Upload</p>
-                                        <p className="text-xs text-gray-500 mt-1">Allowed: MP4</p>
-                                        <input id="video-input" type="file" accept="video/mp4" className="hidden" onChange={(e) => handleVideoChange(e.target.files?.[0])} />
-                                    </div>
-                                    {errors.media?.video && <p className="text-sm text-red-600 mt-2">{errors.media.video.message}</p>}
-                                    {mediaPreviews.video && (
-                                        <div className="relative mt-2">
-                                            <video src={mediaPreviews.video} controls className="rounded w-full max-h-64" />
-                                            <button type="button" onClick={handleRemoveVideo} className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">Remove</button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* STEP 5: Package selection & featured toggle */}
-                        {step === 5 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 5: Package Selection</h2>
-                                <p className="text-gray-700">Select the package that best fits your business needs. Required field.</p>
-                                
-                                {packages.map((pkg) => (
-                                    <label key={pkg.PackageID} className={`block p-4 rounded-lg cursor-pointer transition-all ${watch("packageID") === pkg.PackageID ? "border-2 border-primary ring-1 ring-primary bg-primary-light" : "border border-gray-300 hover:border-primary"} `}>
-                                        <div className="flex items-start">
-                                            <input type="radio" value={pkg.PackageID} {...register("packageID", { required: "Package selection is required" })} className="mt-1 w-4 h-4 text-primary" />
-                                            <div className="ml-3">
-                                                <span className="font-bold text-lg block">{pkg.PackageName} - KES {pkg.PackagePrice.toLocaleString()}</span>
-                                                <p className="text-sm text-gray-600">{pkg.DurationInDays} Days</p>
-                                                <p className="text-sm text-gray-600">{pkg.Description}</p>
-                                             {Array.isArray(pkg.Features) && pkg.Features.length > 0 && (
-                        <ul className="text-xs text-gray-500 list-disc ml-4 mt-1">
-                          {pkg.Features.map((f, i) => <li key={i}>{f}</li>)}
-                        </ul>
-                      )}
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))}
-
-                                {errors.packageID && <p className="text-sm text-red-600 mt-2">{errors.packageID.message}</p>}
-
-                                {/* <div className={`p-4 rounded-lg border-l-4 mt-6 ${canBeFeatured ? "bg-green-50 border-green-500" : "bg-gray-100 border-gray-400"}`}>
-                                    <label className={`flex items-center gap-3 cursor-pointer ${!canBeFeatured ? "opacity-60 cursor-not-allowed" : ""}`}>
-                                        <input type="checkbox" {...register("isFeatured")} disabled={!canBeFeatured} className="w-5 h-5 text-primary rounded" /> 
-                                        <div className="flex flex-col">
-                                            <span className="font-bold">Make Listing Featured (Optional)</span>
-                                            <span className="text-sm text-gray-600">
-                                                {canBeFeatured ? "Enable for premium visibility." : "Only available with the Premium Featured Partner package."}
-                                            </span>
-                                        </div>
-                                    </label>
-                                </div> */}
-                            </div>
-                        )}
-                        
-                        {/* STEP 6: Review & Submit */}
-                        {step === 6 && (
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-secondary">Step 6: Review & Submit</h2>
-                                <p className="text-gray-700">Please review all your details and the selected package before submitting the application for review.</p>
-
-                                {/* Simple Review Summary (Expandable in a full app) */}
-                                <div className="border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
-                                    <h3 className="font-bold text-md border-b pb-1">Summary</h3>
-                                    <p><strong>Business:</strong> {watch("businessName") || "N/A"}</p>
-                                    <p><strong>Category:</strong> {watch("category") || "N/A"} / {watch("subcategory") || "N/A"}</p>
-                                    <p><strong>Short Description:</strong> {watch("shortDescription") || "N/A"}</p>
-                                    <p>
-                                        <strong>Package:</strong> {selectedPackage?.PackageName || "N/A"} 
-                                        (KES {selectedPackage?.PackagePrice.toLocaleString() || "N/A"})
-                                        {watch("isFeatured") && <span className="text-green-600 font-semibold ml-2">(Featured)</span>}
-                                    </p>
-                                    <p><strong>Photos:</strong> {media.photos.length} uploaded.</p>
-                                </div>
-                                
-                                <p className="text-sm text-red-500 font-semibold mt-4">
-                                    By clicking 'Submit Application', you confirm all provided information is accurate and agree to the VisitNakuru.com Rules, Regulations & Code of Conduct.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Navigation buttons (kept styles requested) */}
-                        <div className="flex justify-between mt-6">
-                            {step > 1 && (
-                                <button type="button" onClick={prevStep} className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"> Back </button>
-                            )}
-
-                            {step < totalSteps ? (
-                                <button type="button" onClick={nextStep} className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition ml-auto"> Next </button>
-                            ) : (
-                                <button type="submit" disabled={isSubmitting || mutation.isPending} className={`px-4 py-2 rounded-lg text-white transition ml-auto ${(isSubmitting || mutation.isPending) ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`} >
-                                    {(isSubmitting || mutation.isPending) ? "Submitting..." : "Submit Application"}
-                                </button>
-                            )}
-                        </div>
-
-                        {serverError && <div className="bg-red-100 text-red-700 p-4 rounded mt-4">❌ {serverError}</div>}
-                    </form>
+                  {errors.category && <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>}
                 </div>
+
+                {/* Subcategory (Conditional) */}
+                <div>
+                  {watch("category") && (
+                    <>
+                      <label className="font-bold block mb-1">Sub Category</label>
+                      <select {...register("subcategory", { required: "Sub Category is required" })} className={getInputClass("subcategory")}>
+                        <option value="">Select Subcategory</option>
+                        {subCategories.map((s) => (
+                          <option key={s.CatId} value={s.CatId}>
+                            {s.CatName}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.subcategory && <p className="text-sm text-red-600 mt-1">{errors.subcategory.message}</p>}
+                    </>
+                  )}
+                </div>
+
+                {/* Business Name */}
+                <div>
+                  <label className="font-bold block mb-1">Business Name</label>
+                  <input
+                    {...register("businessName", {
+                      required: "Business Name is required",
+                      maxLength: { value: 50, message: "Business Name must be 50 characters or fewer" },
+                    })}
+                    className={getInputClass("businessName")}
+                  />
+                  {errors.businessName && <p className="text-sm text-red-600 mt-1">{errors.businessName.message}</p>}
+                </div>
+
+                {/* Contact Person */}
+                <div>
+                  <label className="font-bold block mb-1">Contact Person</label>
+                  <input
+                    {...register("contactPerson", {
+                      required: "Contact Person is required",
+                      maxLength: { value: 50, message: "Contact Person must be 50 characters or fewer" },
+                    })}
+                    className={getInputClass("contactPerson")}
+                  />
+                  {errors.contactPerson && <p className="text-sm text-red-600 mt-1">{errors.contactPerson.message}</p>}
+                </div>
+
+                {/* Email (Read-only as per request) */}
+                <div>
+                  <label className="font-bold block mb-1">Email</label>
+                  <input type="email" readOnly className={`${getInputClass("email")} bg-gray-100 cursor-not-allowed`} value={initialEmail} />
+                  {/* hidden registered email to ensure it's included in submission */}
+                  <input type="hidden" {...register("email")} value={initialEmail} />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="font-bold block mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    {...register("phone", {
+                      required: "Phone number is required",
+                      pattern: { value: /^[0-9]{10}$/, message: "Phone number must be 10 digits" },
+                    })}
+                    className={getInputClass("phone")}
+                  />
+                  {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>}
+                </div>
+
+                {/* WhatsApp Number - moved to Step 1 */}
+                <div>
+                  <label className="font-bold block mb-1">WhatsApp Number</label>
+                  <input
+                    type="tel"
+                    {...register("WhatsAppNumber", {
+                      required: "WhatsApp number is required",
+                      pattern: patterns.e164,
+                    })}
+                    className={getInputClass("WhatsAppNumber")}
+                    placeholder="e.g., +254700123456"
+                  />
+                  {errors.WhatsAppNumber && <p className="text-sm text-red-600 mt-1">{errors.WhatsAppNumber.message}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Documents & Location */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 2: Documents & Location</h2>
+
+                {/* Document Uploads */}
+                {(() => {
+                  const selectedSubcatId = watch("subcategory");
+                  const selectedSubcatObj = subCategories.find((s) => String(s.CatId) === String(selectedSubcatId));
+                  const selectedSubcatName = selectedSubcatObj?.CatName;
+                  const requiredDocs = categoryDocsMap[selectedSubcatName] || [];
+
+                  if (!selectedSubcatId) {
+                    return <p className="text-gray-600">Please select a Category & Subcategory on Step 1 first.</p>;
+                  }
+                  if (requiredDocs.length === 0) {
+                    return <p className="text-gray-600">No specific documents are defined for this subcategory.</p>;
+                  }
+
+                  return (
+                    <>
+                      <p className="font-bold text-md mb-2">Required Documents</p>
+                      {requiredDocs.map((dk) => (
+                        <div key={dk} className="mb-4">
+                          <label className="font-bold block mb-1">{docLabels[dk] || dk}</label>
+                          <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const file = e.dataTransfer.files?.[0];
+                              handleFileChange(dk, file);
+                            }}
+                            onClick={() => document.getElementById(`doc-${dk}`)?.click()}
+                            className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${
+                              errors.documents?.[dk] ? "border-red-500 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"
+                            } `}
+                          >
+                            <p className={`text-gray-600 ${errors.documents?.[dk] ? "text-red-600" : ""}`}>Drag &amp; Drop or Click to Upload</p>
+                            <p className="text-xs text-gray-500 mt-1">Allowed: PDF, JPG, PNG</p>
+                            <input id={`doc-${dk}`} type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => handleFileChange(dk, e.target.files?.[0])} />
+                          </div>
+                          {errors.documents?.[dk] && <p className="text-sm text-red-600 mt-2">{errors.documents[dk].message}</p>}
+                          {documentPreviews[dk] && (
+                            <div className="mt-2 flex items-center gap-2">
+                              {String(documentPreviews[dk]).toLowerCase().endsWith(".pdf") ? (
+                                <p className="text-gray-700">📄 {documentPreviews[dk]}</p>
+                              ) : (
+                                <img src={documentPreviews[dk]} alt="preview" className={`h-20 w-20 object-cover rounded border ${errors.documents?.[dk] ? "border-red-500" : "border-gray-200"}`} />
+                              )}
+                              <button type="button" onClick={() => handleRemoveDoc(dk)} className="text-red-500 text-sm hover:underline">
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+
+                <p className="font-bold text-md mb-2">Location & Contact Details</p>
+
+                {/* Physical Address */}
+                <div>
+                  <label className="font-bold block mb-1">Physical Address</label>
+                  <input {...register("physicalAddress", { required: "Physical address is required" })} className={getInputClass("physicalAddress")} />
+                  {errors.physicalAddress && <p className="text-sm text-red-600 mt-1">{errors.physicalAddress.message}</p>}
+                </div>
+
+                {/* Google Map Link */}
+                <div>
+                  <label className="font-bold block mb-1">Google Map Link</label>
+                  <input
+                    {...register("mapLink", { required: "Google Map link is required", pattern: patterns.googleMaps })}
+                    className={getInputClass("mapLink")}
+                  />
+                  {errors.mapLink && <p className="text-sm text-red-600 mt-1">{errors.mapLink.message}</p>}
+                </div>
+
+                {/* Short Description */}
+                <div>
+                  <label className="font-bold block mb-1">Short Description</label>
+                  <textarea
+                    {...register("shortDescription", { required: "Short description is required", minLength: { value: 20, message: "Minimum 20 characters required" } })}
+                    rows={3}
+                    className={getInputClass("shortDescription")}
+                  />
+                  {errors.shortDescription && <p className="text-sm text-red-600 mt-1">{errors.shortDescription.message}</p>}
+                </div>
+
+                {/* Operating Hours */}
+                <div>
+                  <label className="font-bold block mb-1">Operating Hours</label>
+                  <input {...register("operatingHours", { required: "Operating hours are required" })} className={getInputClass("operatingHours")} />
+                  {errors.operatingHours && <p className="text-sm text-red-600 mt-1">{errors.operatingHours.message}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Agreement Form */}
+            {step === 3 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 3: Rules, Regulations & Code of Conduct for Partners </h2>
+
+                {/* Agreement Text - Styled as requested */}
+                <div className="border border-gray-300 rounded p-4 h-96 overflow-y-scroll bg-gray-50 text-sm">
+                  <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed">{AGREEMENT_TEXT}</pre>
+                </div>
+
+                <p className="font-bold text-md mb-2">Social & Web Links (Optional)</p>
+
+                {/* Website */}
+                <div>
+                  <label className="font-bold block mb-1">Website</label>
+                  <input {...register("Website", { pattern: patterns.website })} className={getInputClass("Website")} placeholder="e.g., https://www.yourbusiness.com" />
+                  {errors.Website && <p className="text-sm text-red-600 mt-1">{errors.Website.message}</p>}
+                </div>
+
+                {/* FacebookLink */}
+                <div>
+                  <label className="font-bold block mb-1">Facebook Link</label>
+                  <input {...register("FacebookLink", { pattern: patterns.facebook })} className={getInputClass("FacebookLink")} placeholder="e.g., https://facebook.com/yourpage" />
+                  {errors.FacebookLink && <p className="text-sm text-red-600 mt-1">{errors.FacebookLink.message}</p>}
+                </div>
+
+                {/* XLink (Twitter) */}
+                <div>
+                  <label className="font-bold block mb-1">X (Twitter) Link</label>
+                  <input {...register("XLink", { pattern: patterns.xlink })} className={getInputClass("XLink")} placeholder="e.g., https://x.com/yourhandle" />
+                  {errors.XLink && <p className="text-sm text-red-600 mt-1">{errors.XLink.message}</p>}
+                </div>
+
+                {/* InstagramLink */}
+                <div>
+                  <label className="font-bold block mb-1">Instagram Link</label>
+                  <input {...register("InstagramLink", { pattern: patterns.instagram })} className={getInputClass("InstagramLink")} placeholder="e.g., https://instagram.com/yourhandle" />
+                  {errors.InstagramLink && <p className="text-sm text-red-600 mt-1">{errors.InstagramLink.message}</p>}
+                </div>
+
+                {/* Agreement Acknowledgement */}
+                <p className="font-bold text-md mb-2">Agreement Acknowledgement</p>
+                <div className="space-y-3 p-4 border border-gray-300 rounded bg-white">
+                  {/* Company Name (from agreement structure) */}
+                  <div>
+                    <label className="font-bold block mb-1">I, of Kenyan ID No:</label>
+                    <input {...register("kenyanIdNo", { required: "Kenyan ID No is required" })} className={getAgreementInputClass("kenyanIdNo")} />
+                    {errors.kenyanIdNo && <p className="text-sm text-red-600 mt-1">{errors.kenyanIdNo.message}</p>}
+                  </div>
+
+                  <div>
+                    <label className="font-bold block mb-1">representing (Company Name):</label>
+                    <input {...register("companyNameAcknowledgement", { required: "Company Name is required for acknowledgement" })} className={getAgreementInputClass("companyNameAcknowledgement")} />
+                    {errors.companyNameAcknowledgement && <p className="text-sm text-red-600 mt-1">{errors.companyNameAcknowledgement.message}</p>}
+                  </div>
+
+                  <p className="text-gray-700">
+                    acknowledge that I have read, understood, and agree that our staff and employees agree to abide by the terms of this VisitNakuru.com – Rules, Regulations & Code of Conduct for Listed Partners.
+                  </p>
+
+                  {/* Signature Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-bold block mb-1">Signed </label>
+                      <input
+                        {...register("acknowledgementSignature", { required: "Signature/Name is required" })}
+                        className={getAgreementInputClass("acknowledgementSignature")}
+                        placeholder="Type your full name"
+                      />
+                      {errors.acknowledgementSignature && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementSignature.message}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">Staff Name</label>
+                      <input {...register("acknowledgementStaffName", { required: "Staff Name is required" })} className={getAgreementInputClass("acknowledgementStaffName")} />
+                      {errors.acknowledgementStaffName && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementStaffName.message}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">Position</label>
+                      <input {...register("acknowledgementPosition", { required: "Position is required" })} className={getAgreementInputClass("acknowledgementPosition")} />
+                      {errors.acknowledgementPosition && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementPosition.message}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">Date</label>
+                      <input type="date" {...register("acknowledgementDate", { required: "Date is required" })} className={getAgreementInputClass("acknowledgementDate")} />
+                      {errors.acknowledgementDate && <p className="text-sm text-red-600 mt-1">{errors.acknowledgementDate.message}</p>}
+                    </div>
+                  </div>
+
+                  {/* Final Acknowledgment Checkbox */}
+                  <div className="flex items-start mt-4">
+                    <input type="checkbox" id="agreement-check" {...register("agreementAcknowledged", { required: "You must acknowledge the agreement" })} className={`mt-1 w-4 h-4 text-primary rounded ${errors.agreementAcknowledged ? "border-red-500" : "border-gray-300"}`} />
+                    <label htmlFor="agreement-check" className="ml-2 text-sm text-gray-900 font-bold">
+                      I confirm I have reviewed and accepted the terms of this agreement.
+                    </label>
+                  </div>
+                  {errors.agreementAcknowledged && <p className="text-sm text-red-600 mt-1">{errors.agreementAcknowledged.message}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Content Submission */}
+            {step === 4 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 4: Content Submission</h2>
+
+                {/* Full Description */}
+                <div>
+                  <label className="font-bold block mb-1">Full Description</label>
+                  <textarea
+                    {...register("fullDescription", { required: "Full description is required", minLength: { value: 20, message: "Minimum 20 characters required" } })}
+                    rows={6}
+                    className={getInputClass("fullDescription")}
+                  />
+                  {errors.fullDescription && <p className="text-sm text-red-600 mt-1">{errors.fullDescription.message}</p>}
+                </div>
+
+                {/* Photos Upload */}
+                <div>
+                  <label className="font-bold block mb-1">Upload 3–5 Photos</label>
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handlePhotoChange(e.dataTransfer.files);
+                    }}
+                    onClick={() => document.getElementById("photos-input")?.click()}
+                    className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${errors.media?.photos ? "border-red-500 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"} `}
+                  >
+                    <p className={`text-gray-600 ${errors.media?.photos ? "text-red-600" : ""}`}>Drag &amp; Drop photos here or Click to Upload</p>
+                    <p className="text-xs text-gray-500 mt-1">Allowed: JPG, PNG (3–5 photos)</p>
+                    <input id="photos-input" type="file" multiple accept="image/*" className="hidden" onChange={(e) => handlePhotoChange(e.target.files)} />
+                  </div>
+                  {errors.media?.photos && <p className="text-sm text-red-600 mt-2">{errors.media.photos.message}</p>}
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {mediaPreviews.photos.map((src, i) => (
+                      <div key={i} className="relative">
+                        <img src={src} alt={`photo-${i}`} className="h-24 w-24 object-cover rounded border border-gray-200" />
+                        <button type="button" onClick={() => handleRemovePhoto(i)} className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-1">
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video Upload */}
+                <div>
+                  <label className="font-bold block mt-3">Intro Video (Optional)</label>
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleVideoChange(e.dataTransfer.files?.[0]);
+                    }}
+                    onClick={() => document.getElementById("video-input")?.click()}
+                    className={`rounded-lg p-4 text-center cursor-pointer transition border-2 border-dashed ${errors.media?.video ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary hover:border-primary hover:ring-1 hover:ring-primary"} `}
+                  >
+                    <p className={`text-gray-600 ${errors.media?.video ? "text-red-600" : ""}`}>Drag &amp; Drop video here or Click to Upload</p>
+                    <p className="text-xs text-gray-500 mt-1">Allowed: MP4</p>
+                    <input id="video-input" type="file" accept="video/mp4" className="hidden" onChange={(e) => handleVideoChange(e.target.files?.[0])} />
+                  </div>
+                  {errors.media?.video && <p className="text-sm text-red-600 mt-2">{errors.media.video.message}</p>}
+                  {mediaPreviews.video && (
+                    <div className="relative mt-2">
+                      <video src={mediaPreviews.video} controls className="rounded w-full max-h-64" />
+                      <button type="button" onClick={handleRemoveVideo} className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Package selection & featured toggle */}
+            {step === 5 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 5: Package Selection</h2>
+                <p className="text-gray-700">Select the package that best fits your business needs. Required field.</p>
+
+                {packages.map((pkg) => (
+                  <label key={pkg.PackageID} className={`block p-4 rounded-lg cursor-pointer transition-all ${watch("packageID") === pkg.PackageID ? "border-2 border-primary ring-1 ring-primary bg-primary-light" : "border border-gray-300 hover:border-primary"} `}>
+                    <div className="flex items-start">
+                      <input type="radio" value={pkg.PackageID} {...register("packageID", { required: "Package selection is required" })} className="mt-1 w-4 h-4 text-primary" />
+                      <div className="ml-3">
+                        <span className="font-bold text-lg block">
+                          {pkg.PackageName} - KES {pkg.PackagePrice.toLocaleString()}
+                        </span>
+                        <p className="text-sm text-gray-600">{pkg.DurationInDays} Days</p>
+                        <p className="text-sm text-gray-600">{pkg.Description}</p>
+                        {Array.isArray(pkg.Features) && pkg.Features.length > 0 && (
+                          <ul className="text-xs text-gray-500 list-disc ml-4 mt-1">{pkg.Features.map((f, i) => <li key={i}>{f}</li>)}</ul>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+
+                {errors.packageID && <p className="text-sm text-red-600 mt-2">{errors.packageID.message}</p>}
+              </div>
+            )}
+
+            {/* STEP 6: Review & Submit */}
+            {step === 6 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-secondary">Step 6: Review & Submit</h2>
+                <p className="text-gray-700">Please review all your details and the selected package before submitting the application for review.</p>
+
+                {/* Simple Review Summary (Expandable in a full app) */}
+                <div className="border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50">
+                  <h3 className="font-bold text-md border-b pb-1">Summary</h3>
+                  <p>
+                    <strong>Business:</strong> {watch("businessName") || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Category:</strong> {watch("category") || "N/A"} / {watch("subcategory") || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Short Description:</strong> {watch("shortDescription") || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Package:</strong> {selectedPackage?.PackageName || "N/A"} (KES {selectedPackage?.PackagePrice.toLocaleString() || "N/A"})
+                    {watch("isFeatured") && <span className="text-green-600 font-semibold ml-2">(Featured)</span>}
+                  </p>
+                  <p>
+                    <strong>Photos:</strong> {media.photos.length} uploaded.
+                  </p>
+                </div>
+
+                <p className="text-sm text-red-500 font-semibold mt-4">
+                  By clicking 'Submit Application', you confirm all provided information is accurate and agree to the VisitNakuru.com Rules, Regulations & Code of Conduct.
+                </p>
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div className="flex justify-between mt-6">
+              {step > 1 && (
+                <button type="button" onClick={prevStep} className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                  Back
+                </button>
+              )}
+
+              {step < totalSteps ? (
+                <button type="button" onClick={nextStep} className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition ml-auto">
+                  Next
+                </button>
+              ) : (
+                <button type="submit" disabled={isSubmitting || mutation.isPending} className={`px-4 py-2 rounded-lg text-white transition ml-auto ${(isSubmitting || mutation.isPending) ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}>
+                  {(isSubmitting || mutation.isPending) ? "Submitting..." : "Submit Application"}
+                </button>
+              )}
             </div>
+
+            {serverError && <div className="bg-red-100 text-red-700 p-4 rounded mt-4">❌ {serverError}</div>}
+          </form>
         </div>
-    );
+      </div>
+    </div>
+  );
 }

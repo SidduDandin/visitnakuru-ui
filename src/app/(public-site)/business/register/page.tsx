@@ -25,6 +25,7 @@ export default function RegisterPage() {
       .catch(() => router.push("/login"));
   }, [userAuthToken, router]);
   
+  if (!user) return <p className="min-h-screen bg-gray-50 flex justify-center items-center">Loading...</p>;
   return (
     <>
     {/* SECTION 1: Static Header - Content is now guaranteed to be translated */}

@@ -27,7 +27,7 @@ export default function Settings() {
 
   if (!user)
     return (
-      <div className="min-h-screen flex justify-center items-center">
+      <div className="min-h-screen flex justify-center bg-gray-50 items-center">
         Loading...
       </div>
     );
