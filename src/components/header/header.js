@@ -389,14 +389,51 @@ export default function Header() {
         className="absolute left-0 w-full bg-white shadow-lg border-t border-border"
       >
         <div className="p-6">
-          <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
-            <li><Link href="/contact-us" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.contactUs")}</Link></li>
-            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.support")}</Link></li>
-            <li><Link href="/about-us" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.about")}</Link></li>
-            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.services")}</Link></li>
-            <li><Link href="#" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.careers")}</Link></li>
-            <li><Link href="/blog" onClick={() => {setMenuDeskOpen(false); }}>{t("desktopMegaNav.blog")}</Link></li>
-          </ul>
+        <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
+  <li>
+    <Link href="/contact-us" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.contactUs")}
+    </Link>
+  </li>
+  <li>
+    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.support")}
+    </Link>
+  </li>
+  <li>
+    <Link href="/about-us" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.about")}
+    </Link>
+  </li>
+  <li>
+    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.services")}
+    </Link>
+  </li>
+  <li>
+    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.careers")}
+    </Link>
+  </li>
+  <li>
+    <Link href="/blog" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.blog")}
+    </Link>
+  </li>
+
+  {/* New items */}
+  <li>
+    <Link href="/login" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.login", "Login")}
+    </Link>
+  </li>
+  <li>
+    <Link href="/register" onClick={() => { setMenuDeskOpen(false); }}>
+      {t("desktopMegaNav.becomePartner", "Become a Partner")}
+    </Link>
+  </li>
+</ul>
+
         </div>
       </Transition>
     </header>

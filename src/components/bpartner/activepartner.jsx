@@ -145,7 +145,7 @@ export default function PartnerVerificationList() {
                     <thead className="text-xs uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th className="px-6 py-3">Business Name</th>
-                            <th className="px-6 py-3">Contact Name</th>
+                            <th className="px-6 py-3">Contact Person</th>
                             <th className="px-6 py-3">Email</th>
                             <th className="px-6 py-3">Phone</th>
                             <th className="px-6 py-3">Listing ID</th>

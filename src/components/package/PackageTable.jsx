@@ -53,7 +53,7 @@ export default function PackageTable({
             try {
                 const res = await fetch(`${backendUrl}/api/admin/packages/${packageId}`, {
                     method: "DELETE",
-                    headers: { "x-auth-token": authToken || "" },
+                    headers: { "x-auth-token": authToken },
                 });
 
                 if (!res.ok) {
@@ -71,12 +71,9 @@ export default function PackageTable({
         }
     };
     
-    // The logic remains the same, it just gets called by the toggle now
+   
     const handleToggleStatus = async (packageId, currentStatus) => {
         const action = currentStatus === 1 ? 'deactivate' : 'activate';
-        // Removed window.confirm here to make the toggle feel more instantaneous, 
-        // you might want to add a small confirmation/revert logic if the API call fails.
-        // For now, we'll keep the confirmation for the action
         if (!window.confirm(`Are you sure you want to ${action} this package?`)) {
             return;
         }
@@ -169,7 +166,7 @@ export default function PackageTable({
                                 <tr key={pkg.PackageID} className="border-b dark:border-gray-700">
                                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{pkg.PackageName}</td>
                                     <td className="px-4 py-3">{pkg.DurationInDays}</td>
-                                    <td className="px-4 py-3">${parseFloat(pkg.PackagePrice).toFixed(2)}</td>
+                                    <td className="px-4 py-3">Ksh{parseFloat(pkg.PackagePrice).toFixed(2)}</td>
                                     <td className="px-4 py-3 text-center">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                                             pkg.Status === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
@@ -256,7 +253,7 @@ export default function PackageTable({
                                  </div>
                                  <div className="flex justify-between">
                                      <span className="font-medium text-gray-700 dark:text-gray-300">Package Price:</span>
-                                     <span className="text-gray-900 dark:text-white text-right">${parseFloat(selectedPackage.PackagePrice).toFixed(2)}</span>
+                                     <span className="text-gray-900 dark:text-white text-right">Ksh{parseFloat(selectedPackage.PackagePrice).toFixed(2)}</span>
                                  </div>
                                  <div className="flex justify-between">
                                      <span className="font-medium text-gray-700 dark:text-gray-300">Status:</span>
