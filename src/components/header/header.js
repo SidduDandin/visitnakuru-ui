@@ -48,9 +48,7 @@ export default function Header() {
       document.documentElement.classList.remove("overflow-hidden");
     }
   }, [menuOpen]);
-
- 
-
+  
   // ======== Fetch logged-in user from backend ========
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,7 +57,7 @@ export default function Header() {
 
       try {
         const res = await fetch(`${backendUrl}/api/users/dashboard`, {
-          headers: { "x-auth-token": userAuthToken },
+          headers: { "x-auth-token": userAuthToken },         
         });
 
         if (res.ok) {

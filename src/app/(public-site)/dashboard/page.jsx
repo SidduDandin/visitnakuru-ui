@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { destroyCookie, parseCookies } from "nookies";
 import { useRouter } from "next/navigation";
+import PartnerDetailsModal from "../../../components/partner/PartnerDetailsModal";
 
 export default function DashboardPage() {
 const { userAuthToken } = parseCookies();
@@ -15,6 +16,9 @@ const [activeTab, setActiveTab] = useState("activeBusinesses"); // "activeBusine
 const [searchQuery, setSearchQuery] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(10);
+
+const [showModal, setShowModal] = useState(false);
+const [selectedPartnerId, setSelectedPartnerId] = useState(null);
 
 const statusLabels = {
 0: { label: "Draft", color: "bg-gray-200 text-gray-800" },
@@ -36,7 +40,7 @@ return;
 }
 
   try {
-    const base = process.env.NEXT_PUBLIC_BACKEND_API_URL || "";
+    const base = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const [dashRes, bizRes, pkgRes] = await Promise.all([
       fetch(`${base}/api/users/dashboard`, { headers: { "x-auth-token": userAuthToken } }),
       fetch(`${base}/api/users/get-user-businesses`, { headers: { "x-auth-token": userAuthToken } }),
@@ -89,16 +93,26 @@ setCurrentPage(page);
 window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
-const handlePayment = (partnerId) => {
+const handlePayment = (subscriptionId) => {
 // open payment flow for partner
-alert("Proceed to payment for PartnerID:", {partnerId});
+//alert(`Proceed to payment for PartnerID:${subscriptionId}`);
 // e.g. router.push(/payment?partnerId=${partnerId})
 };
 
-const handleAddDetails = (subscriptionIdOrPartnerId) => {
+const handleAddDetails = (PartnerId) => {
 // open add-details flow - either subscription id or partner id depending on context
-alert("Open add details for ID:", {subscriptionIdOrPartnerId});
+alert(`Open add details for ID: ${PartnerId}`);
 // e.g. router.push(/business/add-details/${subscriptionIdOrPartnerId})
+};
+
+const openAddDetailsModal = (partnerId) => {
+setSelectedPartnerId(partnerId);
+setShowModal(true);
+};
+
+const closeModal = () => {
+setShowModal(false);
+setSelectedPartnerId(null);
 };
 
 const formatDate = (d) => {
@@ -109,6 +123,7 @@ return new Date(d).toLocaleDateString();
 return d;
 }
 };
+
 
 if (!user) return <p className="min-h-screen bg-gray-50 flex justify-center items-center">Loading...</p>;
 
@@ -200,39 +215,36 @@ return (
                         <p className="text-sm text-gray-600 mt-2"> <strong>Category: </strong>{b.category?.CatName || "N/A"}</p>
 
                         <p className="mt-3 text-sm text-gray-700">
-                          <strong>Contact:</strong> {b.ContactName || "-"} |
-                          <strong> Email:</strong> {b.Email || "-"} 
-                          
+                          <strong>Contact:</strong> {b.ContactName || "-"}                       
+                        </p>
+                        <p className="mt-3 text-sm text-gray-700">              
+                          <strong> Email:</strong> {b.Email || "-"}                          
                         </p>
                         <p className="mt-3 text-sm text-gray-700">                       
                           <strong> Phone:</strong> {b.Phone || "-"}
                         </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          <strong>Listing ID:</strong> {b.ListingID || "N/A"} |
+                        <p className="mt-3 text-sm text-gray-700">
+                          <strong>Listing ID:</strong> {b.ListingID || "N/A"}                      
+                        </p>
+                        <p className="mt-3 text-sm text-gray-700">                      
                           <strong> Applied:</strong> {formatDate(b.AppliedDate || b.CreatedDate)}
                         </p>
                          {/* Buttons area */}
                     <div className="mt-4 flex gap-3">
                       {/* Make Payment: only for Approved (3) and only when viewing In-Progress tab */}
-                      {activeTab === "inProgress" && b.Status === 3 && (
-                        <button
-                          onClick={() => handlePayment(b.PartnerID)}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        >
-                          Make Payment
-                        </button>
-                      )}
-
+                     
                       {/* Business-level Add Details when business status is Request Info (2) */}
-                      {activeTab === "inProgress" && b.Status === 2 && (
+                      {/* {activeTab === "inProgress" && b.Status === 2 && (
                         <button
                           onClick={() => handleAddDetails(b.PartnerID)}
                           className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
                         >
                           Add Details
                         </button>
-                      )}
-                       
+                      )} */}
+                           {activeTab === "inProgress" && b.Status === 2 && (
+                      <button onClick={() => openAddDetailsModal(b.PartnerID)} className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Add Details</button>
+                    )}
                     </div>
                       </div>
 
@@ -287,15 +299,16 @@ return (
                               </span>
                             </div>
 
-                            {/* Package-level Add Details when Request Info */}
-                            {isRequestInfo && (
-                              <button
-                                onClick={() => handleAddDetails(p.SubscriptionID)}
-                                className="mt-3 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
-                              >
-                                Add Details
-                              </button>
-                            )}
+                            
+                             {activeTab === "inProgress" && p.Status === String(p.Status) && (
+                        <button
+                          onClick={() => handlePayment(p.SubscriptionID)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        >
+                          Make Payment
+                        </button>
+                      )}
+
                           </div>
                         );
                       })
@@ -337,6 +350,11 @@ return (
       </div>
     </div>
     {/* END single wrapper */}
+
+     {/* modal */}
+    {showModal && (
+      <PartnerDetailsModal partnerId={selectedPartnerId} isOpen={showModal} onClose={closeModal} />
+    )}
   </div>
 </div>
 
