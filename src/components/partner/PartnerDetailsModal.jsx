@@ -412,6 +412,7 @@ console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
           <div>
             <h2 className="text-2xl font-semibold">Update Business Details</h2>
             <p className="text-sm text-gray-600 mt-1">Edit business information, documents and media</p>
+            <h4 className="text-sm text-gray-600 mt-1">Note: {Requestmoreinfo || "N/A"}</h4>
           </div>
           <button onClick={onClose} className="text-xl text-gray-500 hover:text-gray-800">✖</button>
         </div>
@@ -476,7 +477,7 @@ console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
                 <div>
                  
                   <h3 className="text-lg font-semibold mb-4">Required Documents ({currentSubcatName || "N/A"})</h3>
-                  <p className="text-sm text-gray-600 mt-1">Note: {Requestmoreinfo || "N/A"}</p>
+                  
                   {requiredDocKeys.length === 0 && <p className="text-sm text-gray-600 mb-4">No specific documents configured for this subcategory.</p>}
 
                   <div className="space-y-6">
