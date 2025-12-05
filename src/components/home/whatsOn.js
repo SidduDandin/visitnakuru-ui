@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function WhatsOn(){
 	return (
-		<div className="md:py-15 py-12 text-black">
+		<div className="md:py-15 pt-8 pb-5 text-black">
 			<div className="container">
 				<div className="top-contents">
 					<h2 className="mb-5 pr-14">What&apos;s On</h2>

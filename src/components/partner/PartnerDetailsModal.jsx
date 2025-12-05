@@ -199,7 +199,18 @@ export default function PartnerDetailsModal({ partnerId, isOpen, onClose, onSave
       
         setDocs(existingDocs);
 
-        setPhotos((p.photos || []).map((ph) => ({ ...ph, isNew: false })));
+         const existingPhotos = (p.photos || []).map((ph) => ({
+  // make SURE these are present and clean
+  PhotoID: ph.PhotoID,              // or ph.photoId if your API uses that
+  FilePath: ph.FilePath,
+  FileName: ph.FileName || ph.PhotoName || "",
+  isNew: false,
+}));
+
+//console.log("Loaded photos from backend:", existingPhotos.map(p => p.PhotoID));
+setPhotos(existingPhotos);
+
+        //setPhotos((p.photos || []).map((ph) => ({ ...ph, isNew: false })));
         setVideo((p.videos && p.videos[0]) ? { ...p.videos[0], isNew: false } : null);
 
         showToast("success", "Business Details loaded");
@@ -334,7 +345,7 @@ if (keepDocs.length === 0) {
   });
 }
 
-console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
+//console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
 
 
       // 2) new documents -> we MUST pair each file with docKey_index
@@ -355,8 +366,8 @@ console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
       } else {
         keptPhotos.forEach((p) => fd.append("existingPhotos[]", String(p.PhotoID)));
       }
-      photos.filter((p) => p.isNew && p.file).forEach((p) => fd.append("photos", p.file));
-
+      //photos.filter((p) => p.isNew && p.file).forEach((p) => fd.append("photos", p.file));
+      //console.log("FD: existingPhotos[]", keptPhotos.map(d => d.PhotoID));
       // 4) video
       if (video) {
         if (video.isNew && video.file) fd.append("videos", video.file);
@@ -381,7 +392,7 @@ console.log("FD: existingDocs[]", keepDocs.map(d => d.DocumentID));
 
       showToast("success", "Updated successfully");
       //router.push("/dashboard");
-      window.location.href="/dashboard";
+      //window.location.href="/dashboard";
       if (typeof onSaved === "function") onSaved();
       setTimeout(() => onClose && onClose(), 400);
     } catch (err) {

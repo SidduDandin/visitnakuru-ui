@@ -66,13 +66,20 @@
     "searchPlaceholder": "Buscar..."
   },
   "nav": {
+    "home": "Inicio",
     "whatsOn": "Qué hay",
     "thingsToDo": "Cosas que hacer",
     "foodDrink": "Comida y bebida",
     "shopping": "Compras",
-    "bookTickets": "Comprar entradas",
-    "visitorInfo": "Información al Visitante"
+    "Login": "Acceso",
+    "BecomeaPartner": "Conviértete en socio"
   },
+  "userMenu": {
+  "dashboard": "Tablero",
+  "settings": "Configuraciones",
+  "listMyBusiness": "Registrar mi negocio",
+  "logout": "Cerrar sesión"
+},
   "mobileNav": {
     "aboutUs": "Sobre Nosotros",
     "news": "Noticias",
@@ -90,7 +97,9 @@
     "about": "Acerca de",
     "services": "Servicios",
     "careers": "Carreras",
-    "blog": "Blog"
+    "blog": "Blog",
+    "bookTickets": "Comprar entradas",
+    "visitorInfo": "Información al Visitante"
   },
   "footer": {
     "whatsOn": "Qué hay",

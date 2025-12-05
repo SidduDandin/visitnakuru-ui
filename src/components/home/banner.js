@@ -12,7 +12,7 @@ export default function Banner(){
                         <div className="bg-cover bg-no-repeat bg-center md:min-h-[550px] min-h-[450px] flex items-center justify-center py-7 px-10 before:content-[''] before:absolute before:top-0 before:left-0 before:w-[100%] before:h-[100%] before:bg-black before:opacity-25 text-white text-center" style={{ "backgroundImage" : "url(/frontend/images/banner/banner-1.png)"}}>
                             <div className="container relative z-10">
                                 <div className="max-w-[970px] mx-auto">
-                                    <h2 className="m-0">Your gateway to <br />nature, fun and events</h2>
+                                    <h1 className="m-0">Your gateway to <br />nature, fun and events</h1>
                                 </div>
                             </div>
                         </div>

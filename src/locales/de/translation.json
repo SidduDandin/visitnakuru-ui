@@ -67,13 +67,20 @@
     "searchPlaceholder": "Suchen..."
   },
   "nav": {
+    "home": "Homepage",
     "whatsOn": "Was ist los",
     "thingsToDo": "Unternehmungen",
     "foodDrink": "Essen & Trinken",
     "shopping": "Einkaufen",
-    "bookTickets": "Tickets buchen",
-    "visitorInfo": "Besucherinfo"
+    "Login": "Login",
+    "BecomeaPartner": "Werden Sie Partner"
   },
+  "userMenu": {
+  "dashboard": "Übersichtsseite",
+  "settings": "Einstellungen",
+  "listMyBusiness": "Mein Unternehmen eintragen",
+  "logout": "Abmelden"
+},
   "mobileNav": {
     "aboutUs": "Über Uns",
     "news": "Nachrichten",
@@ -91,7 +98,9 @@
     "about": "Über uns",
     "services": "Dienstleistungen",
     "careers": "Karriere",
-    "blog": "Blog"
+    "blog": "Blog",
+    "bookTickets": "Tickets buchen",
+    "visitorInfo": "Besucherinfo"
   },
   "footer": {
     "whatsOn": "Was ist los",

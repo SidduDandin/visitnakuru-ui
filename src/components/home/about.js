@@ -7,7 +7,7 @@ export default function About() {
   	const [isExpanded, setIsExpanded] = useState(false);
 
 	return (
-		<div className="pt-14 pb-5">
+		<div className="md:pt-14 md:pb-5 pt-9 pb-2">
 			<div className="container">
 				<div className="max-w-[800px] mx-auto text-center">
 					<h2 className="mb-3">Karibu Nakuru!</h2>

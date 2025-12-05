@@ -65,13 +65,22 @@
     "searchPlaceholder": "搜索..."
   },
   "nav": {
+    "home": "首页",
     "whatsOn": "近期活动",
     "thingsToDo": "游玩项目",
     "foodDrink": "餐饮",
     "shopping": "购物",
-    "bookTickets": "预订门票",
-    "visitorInfo": "游客信息"
+    "Login": "登录",
+    "BecomeaPartner": "成为合作伙伴"
   },
+  
+  "userMenu": {
+  "dashboard": "仪表板",
+  "settings": "设置",
+  "listMyBusiness": "列出我的业务",
+  "logout": "退出登录"
+},
+
   "mobileNav": {
     "aboutUs": "关于我们",
     "news": "新闻",
@@ -89,7 +98,9 @@
     "about": "关于",
     "services": "服务",
     "careers": "招聘",
-    "blog": "博客"
+    "blog": "博客",
+    "bookTickets": "预订门票",
+    "visitorInfo": "游客信息"
   },
   "footer": {
     "whatsOn": "近期活动",

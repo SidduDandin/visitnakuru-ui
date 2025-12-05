@@ -13,6 +13,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { useTranslation } from "react-i18next";
 import { parseCookies, destroyCookie } from "nookies";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   // ======== State ========
@@ -20,12 +21,18 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuDeskOpen, setMenuDeskOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
- 
+  const pathname = usePathname();
+  const protectedUserPaths = ["/dashboard", "/business/register", "/settings"];
+  const isProtectedPage = protectedUserPaths.some((p) =>
+    pathname.startsWith(p)
+  );
+
   const [user, setUser] = useState(null);
   // ======== Language context ========
   const { lang, changeLanguage, isMounted } = useLanguage();
   const { t } = useTranslation();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
   // Supported languages
   const supportedLangs = [
     { code: "en", name: "English", short: "EN" },
@@ -48,8 +55,14 @@ export default function Header() {
       document.documentElement.classList.remove("overflow-hidden");
     }
   }, [menuOpen]);
-  
-  // ======== Fetch logged-in user from backend ========
+
+  useEffect(() => {
+  setOpen(false);
+  setMenuOpen(false);
+  setMenuDeskOpen(false);
+}, [pathname]);
+
+  // ======== Fetch logged-in user ========
   useEffect(() => {
     const fetchUser = async () => {
       const { userAuthToken } = parseCookies();
@@ -57,7 +70,7 @@ export default function Header() {
 
       try {
         const res = await fetch(`${backendUrl}/api/users/dashboard`, {
-          headers: { "x-auth-token": userAuthToken },         
+          headers: { "x-auth-token": userAuthToken },
         });
 
         if (res.ok) {
@@ -65,8 +78,8 @@ export default function Header() {
           setIsLoggedIn(true);
           setUser(data.user);
         } else {
-          setUser(null);
           setIsLoggedIn(false);
+          setUser(null);
         }
       } catch (err) {
         console.error("User fetch error:", err);
@@ -74,23 +87,18 @@ export default function Header() {
     };
 
     fetchUser();
-
-  // auto-refresh after login
-  // window.addEventListener("userLogin", fetchUser);
-  // return () => window.removeEventListener("userLogin", fetchUser);
   }, [backendUrl]);
 
   // ======== Logout ========
-   const handleLogout = () => {
+  const handleLogout = () => {
     destroyCookie(null, "userAuthToken");
-    //localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
     window.location.href = "/login";
   };
 
   return (
-    <header className="relative z-50 md:pr-7 pr-4">
+    <header className="relative z-50 md:pr-7 pr-4 text-[16px]">
       <div className="flex flex-nowrap items-center justify-between">
         {/* ======== Logo ======== */}
         <div className="flex-shrink">
@@ -107,30 +115,37 @@ export default function Header() {
 
         {/* ======== Nav + Actions ======== */}
         <div className="flex flex-nowrap items-center justify-end gap-5 text-dark-gray grow-1">
+
           {/* ======== Desktop Nav ======== */}
+          {(isLoggedIn && !isProtectedPage) && (
+            <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
+              <li><Link href="/">{t("nav.home")}</Link></li>
+              <li><Link href="#">{t("nav.whatsOn")}</Link></li>
+              <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
+              <li><Link href="#">{t("nav.foodDrink")}</Link></li>
+              <li><Link href="#">{t("nav.shopping")}</Link></li>
+            </ul>
+          )}
 
-         
-          <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
-            <li><Link href="#">{t("nav.whatsOn")}</Link></li>
-            <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
-            <li><Link href="#">{t("nav.foodDrink")}</Link></li>
-            <li><Link href="#">{t("nav.shopping")}</Link></li>
-            <li><Link href="#">{t("nav.bookTickets")}</Link></li>
-            <li><Link href="#">{t("nav.visitorInfo")}</Link></li>
-          </ul>
-          
-  
-   
+          {(!isLoggedIn && !isProtectedPage) && (
+            <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
+              <li><Link href="/">{t("nav.home")}</Link></li>
+              <li><Link href="#">{t("nav.whatsOn")}</Link></li>
+              <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
+              <li><Link href="#">{t("nav.foodDrink")}</Link></li>
+              <li><Link href="#">{t("nav.shopping")}</Link></li>
+              {/* <li><Link href="/login">{t("nav.Login")}</Link></li> */}
+              <li><Link href="/register">{t("nav.BecomeaPartner")}</Link></li>
+            </ul>
+          )}
 
-          {/* Logged out → Show Language Selector */}
-          {!isLoggedIn && (
+          {/* ======== Language Selector (Hide on Protected + Logged In) ======== */}
+          {(isLoggedIn && !isProtectedPage || !isLoggedIn) && (
             <Menu as="div" className="relative inline-block text-left">
               <MenuButton className="inline-flex w-full justify-center items-center gap-x-1.5 rounded-md md:px-2 px-1 py-2 text-dark-gray focus:outline-none">
                 {isMounted ? (
                   <>
-                    <span className="hidden md:inline">
-                      {currentLang.name}
-                    </span>
+                    <span className="hidden md:inline">{currentLang.name}</span>
                     <span className="md:hidden">{currentLang.short}</span>
                   </>
                 ) : (
@@ -139,31 +154,14 @@ export default function Header() {
                     <span className="md:hidden">EN</span>
                   </>
                 )}
-                <svg
-                  width="15"
-                  height="9"
-                  viewBox="0 0 15 9"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M1 1L7.44628 6.97776L14 1"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  ></path>
+                <svg width="15" height="9" viewBox="0 0 15 9" fill="none">
+                  <path d="M1 1L7.44628 6.97776L14 1" stroke="currentColor" strokeWidth="2"></path>
                 </svg>
               </MenuButton>
 
-              <Transition
-                enter="transition ease-out duration-200"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="transition ease-in duration-150"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
+              <Transition>
                 <MenuItems className="absolute right-0 z-[9999] mt-2 md:w-56 w-40 origin-top-right bg-white border border-border focus:outline-none">
-                  <div className="py-1 max-h-40 overflow-auto">
+                  <div className="py-1 max-h-50 overflow-auto">
                     {supportedLangs.map((l) => (
                       <MenuItem key={l.code}>
                         <button
@@ -184,146 +182,156 @@ export default function Header() {
             </Menu>
           )}
 
-          {/* Logged in → Show user dropdown */}
-          {/* ======== User Dropdown when Logged In ======== */}
+          {/* ======== User Dropdown only on Protected Pages ======== */}
+          {(isLoggedIn && !isProtectedPage) && (
+            <Menu as="div" className="relative inline-block text-left">
+            <MenuButton className="inline-flex max-w-[160px] justify-center items-center text-center truncate gap-x-1.5 bg-white px-2 py-2 text-gray-700 focus:outline-none transition">
+               Hi, {(user?.UserFullName || "User")?.split(" ")[0]}
+                <svg width="15" height="9" viewBox="0 0 15 9" fill="none" className="ml-1">
+                  <path d="M1 1L7.44628 6.97776L14 1" stroke="currentColor" strokeWidth="2"></path>
+                </svg>
+              </MenuButton>
 
-          {isLoggedIn && (
-  <Menu as="div" className="relative inline-block text-left">
-    <MenuButton className="inline-flex w-full justify-center items-center gap-x-1.5 rounded-full border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 focus:outline-none transition">
-      Hi, {user.UserFullName || "User"}
-      <svg
-        width="15"
-        height="9"
-        viewBox="0 0 15 9"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="ml-1"
+              <Transition>
+                <MenuItems className="absolute right-0 z-[9999] mt-2 w-56 origin-top-right bg-white border border-border shadow-lg focus:outline-none">
+  <div className="py-1">
+    <MenuItem>
+      <Link
+        href="/dashboard"
+        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
       >
-        <path
-          d="M1 1L7.44628 6.97776L14 1"
-          stroke="currentColor"
-          strokeWidth="2"
-        ></path>
-      </svg>
-    </MenuButton>
+        {t("userMenu.dashboard")}
+      </Link>
+    </MenuItem>
 
-    <Transition
-      enter="transition ease-out duration-200"
-      enterFrom="opacity-0 scale-95"
-      enterTo="opacity-100 scale-100"
-      leave="transition ease-in duration-150"
-      leaveFrom="opacity-100 scale-100"
-      leaveTo="opacity-0 scale-95"
-    >
-      <MenuItems className="absolute right-0 z-[9999] mt-2 w-56 origin-top-right bg-white border border-border rounded-md shadow-lg focus:outline-none">
-        <div className="py-1">
-          <MenuItem>
-            <Link
-              href="/dashboard"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Dashboard
-            </Link>
-          </MenuItem>
-          <MenuItem>
-            <Link
-              href="/settings"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Settings
-            </Link>
-          </MenuItem>
-          <MenuItem>
-            <Link
-              href="/business/register"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              List My Business
-            </Link>
-          </MenuItem>
-          <MenuItem>
-            <button
-              onClick={handleLogout}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Logout
-            </button>
-          </MenuItem>
-        </div>
-      </MenuItems>
-    </Transition>
-  </Menu>
+    <MenuItem>
+      <Link
+        href="/settings"
+        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+      >
+        {t("userMenu.settings")}
+      </Link>
+    </MenuItem>
+
+    <MenuItem>
+      <Link
+        href="/business/register"
+        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+      >
+        {t("userMenu.listMyBusiness")}
+      </Link>
+    </MenuItem>
+
+    <MenuItem>
+      <button
+        onClick={handleLogout}
+        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+      >
+        {t("userMenu.logout")}
+      </button>
+    </MenuItem>
+  </div>
+</MenuItems>
+
+              </Transition>
+            </Menu>
           )}
 
+          {(isLoggedIn && isProtectedPage) && (
+            <Menu as="div" className="relative inline-block text-left">
+            <MenuButton className="inline-flex max-w-[160px] justify-center items-center text-center truncate gap-x-1.5 bg-white px-2 py-2 text-gray-700 focus:outline-none transition">
+               Hi, {(user?.UserFullName || "User")?.split(" ")[0]}
+                <svg width="15" height="9" viewBox="0 0 15 9" fill="none" className="ml-1">
+                  <path d="M1 1L7.44628 6.97776L14 1" stroke="currentColor" strokeWidth="2"></path>
+                </svg>
+              </MenuButton>
 
-          {/* ======== Search Button ======== */}
-          <button
-            onClick={() => {
-              setOpen((prev) => !prev);
-              setMenuDeskOpen(false);
-              setMenuOpen(false);
-            }}
-            className="py-2 px-1 flex items-center gap-1 focus:outline-none"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-5 h-5"
-            >
-              <path
-                d="M9.65926 19.3113C11.8044 19.3114 13.8882 18.5955 15.5806 17.2772L21.9654 23.6629C22.4423 24.1236 23.2023 24.1104 23.663 23.6334C24.1123 23.1681 24.1123 22.4303 23.663 21.965L17.2782 15.5793C20.5491 11.3681 19.7874 5.3023 15.5769 2.03089C11.3663 -1.24052 5.30149 -0.478719 2.03058 3.73247C-1.24033 7.94365 -0.478647 14.0095 3.7319 17.2809C5.42704 18.598 7.51272 19.3124 9.65926 19.3113ZM4.52915 4.52615C7.36246 1.69235 11.9562 1.6923 14.7895 4.52604C17.6229 7.35978 17.6229 11.9542 14.7896 14.788C11.9563 17.6218 7.36262 17.6218 4.52926 14.7881C1.69595 11.975 1.67915 7.39723 4.49181 4.56349L4.52915 4.52615Z"
-                fill="#46454B"
-              />
-            </svg>
-            <span className="lg:inline-block hidden">
-              {t("header.searchButton")}
-            </span>
-          </button>
+              <Transition>
+                <MenuItems className="absolute right-0 z-[9999] mt-2 w-56 origin-top-right bg-white border border-border shadow-lg focus:outline-none">
+                  <div className="py-1">
+                    <MenuItem>
+                      <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
+                    </MenuItem>
+                    <MenuItem>
+                      <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</Link>
+                    </MenuItem>
+                    <MenuItem>
+                      <Link href="/business/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">List My Business</Link>
+                    </MenuItem>
+                    <MenuItem>
+                      <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Logout</button>
+                    </MenuItem>
+                  </div>
+                </MenuItems>
+              </Transition>
+            </Menu>
+          )}
 
-          {/* ======== Mobile Menu Toggle ======== */}
-          <div className="menu-bar-wpr xl:hidden">
+          {/* ======== Search Button (Hide on Protected + Logged In) ======== */}
+          {(!isLoggedIn || !isProtectedPage) && (
             <button
-              type="button"
-              className={`menu-bar menu-bar-primary ${
-                menuOpen ? "active" : ""
-              }`}
               onClick={() => {
-                setMenuOpen((prev) => !prev);
-                setOpen(false);
+                setOpen((prev) => !prev);
                 setMenuDeskOpen(false);
-              }}
-            >
-              <span className="bars bar1"></span>
-              <span className="bars bar2"></span>
-              <span className="bars bar3"></span>
-            </button>
-          </div>
-
-          {/* ======== Desktop Mega Menu Toggle ======== */}
-          <div className="menu-bar-wpr xl:block hidden ml-2">
-            <button
-              type="button"
-              className={`menu-bar menu-bar-primary mr-3 ${
-                menuDeskOpen ? "active" : ""
-              }`}
-              onClick={() => {
-                setMenuDeskOpen((prev) => !prev);
-                setOpen(false);
                 setMenuOpen(false);
               }}
+              className="py-2 px-1 flex items-center gap-1 focus:outline-none"
             >
-              <span className="bars bar1"></span>
-              <span className="bars bar2"></span>
-              <span className="bars bar3"></span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9.65926 19.3113C11.8044 19.3114 13.8882 18.5955 15.5806 17.2772L21.9654 23.6629C22.4423 24.1236 23.2023 24.1104 23.663 23.6334C24.1123 23.1681 24.1123 22.4303 23.663 21.965L17.2782 15.5793C20.5491 11.3681 19.7874 5.3023 15.5769 2.03089C11.3663 -1.24052 5.30149 -0.478719 2.03058 3.73247C-1.24033 7.94365 -0.478647 14.0095 3.7319 17.2809C5.42704 18.598 7.51272 19.3124 9.65926 19.3113ZM4.52915 4.52615C7.36246 1.69235 11.9562 1.6923 14.7895 4.52604C17.6229 7.35978 17.6229 11.9542 14.7896 14.788C11.9563 17.6218 7.36262 17.6218 4.52926 14.7881C1.69595 11.975 1.67915 7.39723 4.49181 4.56349L4.52915 4.52615Z"
+                  fill="#46454B"
+                />
+              </svg>
+              <span className="lg:inline-block hidden">
+                {t("header.searchButton")}
+              </span>
             </button>
-          </div>
+          )}
+
+          {/* ======== Mobile Menu Toggle (Hide on Protected + Logged In) ======== */}
+          {(!isLoggedIn || !isProtectedPage) && (
+            <div className="menu-bar-wpr xl:hidden">
+              <button
+                type="button"
+                className={`menu-bar menu-bar-primary ${menuOpen ? "active" : ""}`}
+                onClick={() => {
+                  setMenuOpen((prev) => !prev);
+                  setOpen(false);
+                  setMenuDeskOpen(false);
+                }}
+              >
+                <span className="bars bar1"></span>
+                <span className="bars bar2"></span>
+                <span className="bars bar3"></span>
+              </button>
+            </div>
+          )}
+
+          {/* ======== Desktop Mega Menu Toggle (Hide on Protected + Logged In) ======== */}
+          {(!isLoggedIn || !isProtectedPage) && (
+            <div className="menu-bar-wpr xl:block hidden ml-2">
+              <button
+                type="button"
+                className={`menu-bar menu-bar-primary mr-3 ${
+                  menuDeskOpen ? "active" : ""
+                }`}
+                onClick={() => {
+                  setMenuDeskOpen((prev) => !prev);
+                  setOpen(false);
+                  setMenuOpen(false);
+                }}
+              >
+                <span className="bars bar1"></span>
+                <span className="bars bar2"></span>
+                <span className="bars bar3"></span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ======== Mobile Menu ======== */}
+      {/* ======== Mobile Menu (unchanged) ======== */}
       <div
         className={`mobile-menu transition-opacity duration-300 border-t border-border ${
           menuOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -344,9 +352,9 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ======== Search Box ======== */}
+      {/* ======== Search Box (unchanged) ======== */}
       <Transition
-        show={open}
+        show={open && (!isLoggedIn || !isProtectedPage)}
         enter="transition ease-out duration-200"
         enterFrom="opacity-0 -translate-y-2"
         enterTo="opacity-100 translate-y-0"
@@ -375,7 +383,7 @@ export default function Header() {
         </div>
       </Transition>
 
-      {/* ======== Desktop Mega Menu ======== */}
+      {/* ======== Desktop Mega Menu (unchanged) ======== */}
       <Transition
         show={menuDeskOpen}
         enter="transition ease-out duration-200"
@@ -387,51 +395,16 @@ export default function Header() {
         className="absolute left-0 w-full bg-white shadow-lg border-t border-border"
       >
         <div className="p-6">
-        <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
-  <li>
-    <Link href="/contact-us" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.contactUs")}
-    </Link>
-  </li>
-  <li>
-    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.support")}
-    </Link>
-  </li>
-  <li>
-    <Link href="/about-us" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.about")}
-    </Link>
-  </li>
-  <li>
-    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.services")}
-    </Link>
-  </li>
-  <li>
-    <Link href="#" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.careers")}
-    </Link>
-  </li>
-  <li>
-    <Link href="/blog" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.blog")}
-    </Link>
-  </li>
-
-  {/* New items */}
-  <li>
-    <Link href="/login" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.login", "Login")}
-    </Link>
-  </li>
-  <li>
-    <Link href="/register" onClick={() => { setMenuDeskOpen(false); }}>
-      {t("desktopMegaNav.becomePartner", "Become a Partner")}
-    </Link>
-  </li>
-</ul>
-
+          <ul className="m-0 list-none grid grid-cols-4 gap-4 max-w-[1200px] mx-auto [&_a]:transition [&_a]:hover:text-black">
+            <li><Link href="/contact-us" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.contactUs")}</Link></li>
+            <li><Link href="#" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.support")}</Link></li>
+            <li><Link href="/about-us" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.about")}</Link></li>
+            <li><Link href="#" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.services")}</Link></li>
+            <li><Link href="#" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.careers")}</Link></li>
+            <li><Link href="/blog" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.blog")}</Link></li>
+            <li><Link href="#" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.bookTickets", "Book Tickets")}</Link></li>
+            <li><Link href="#" onClick={() => { setMenuDeskOpen(false); }}>{t("desktopMegaNav.visitorInfo", "Visitor Information")}</Link></li>
+          </ul>
         </div>
       </Transition>
     </header>

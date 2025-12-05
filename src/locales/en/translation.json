@@ -66,13 +66,22 @@
     "searchPlaceholder": "Search..."
   },
   "nav": {
+    "home": "Home",
     "whatsOn": "What's On",
     "thingsToDo": "Things to Do",
     "foodDrink": "Food & Drink",
     "shopping": "Shopping",
-    "bookTickets": "Book Tickets",
-    "visitorInfo": "Visitor Information"
+    "Login": "Login",
+    "BecomeaPartner": "Become a Partner",
+    "dashboard": "Dashboard"
   },
+ "userMenu": {
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "listMyBusiness": "List My Business",
+  "logout": "Logout"
+},
+
   "mobileNav": {
     "aboutUs": "About Us",
     "news": "News",
@@ -90,7 +99,9 @@
     "about": "About",
     "services": "Services",
     "careers": "Careers",
-    "blog": "Blog"
+    "blog": "Blog",
+    "bookTickets": "Book Tickets",
+    "visitorInfo": "Visitor Information"
   },
   "footer": {
     "whatsOn": "What's On",

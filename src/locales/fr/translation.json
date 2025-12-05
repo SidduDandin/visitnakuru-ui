@@ -66,13 +66,21 @@
     "searchPlaceholder": "Rechercher..."
   },
   "nav": {
+    "home": "Accueil",
     "whatsOn": "Quoi de neuf",
     "thingsToDo": "Choses à faire",
-    "foodDrink": "Nourriture et Boissons",
-    "shopping": "Shopping",
-    "bookTickets": "Réserver des Billets",
-    "visitorInfo": "Informations Visiteurs"
+    "foodDrink": "Aliments et Boissons",
+    "shopping": "Achats",
+    "Login": "Se connecter",
+    "BecomeaPartner": "Devenez partenaire"
   },
+  
+  "userMenu": {
+  "dashboard": "Tableau de bord",
+  "settings": "Paramètres",
+  "listMyBusiness": "Répertorier mon entreprise",
+  "logout": "Se déconnecter"
+},
   "mobileNav": {
     "aboutUs": "À Propos de Nous",
     "news": "Actualités",
@@ -90,7 +98,9 @@
     "about": "À Propos",
     "services": "Services",
     "careers": "Carrières",
-    "blog": "Blog"
+    "blog": "Blog",
+    "bookTickets": "Réserver des Billets",
+    "visitorInfo": "Informations Visiteurs"
   },
   "footer": {
     "whatsOn": "Quoi de neuf",
