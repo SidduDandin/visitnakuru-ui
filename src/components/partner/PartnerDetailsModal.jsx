@@ -368,7 +368,7 @@ if (keepDocs.length === 0) {
       }
       
       photos.filter((p) => p.isNew && p.file).forEach((p) => fd.append("photos", p.file));
-      //console.log("FD: existingPhotos[]", keptPhotos.map(d => d.PhotoID));
+      console.log("FD: photos", photos.map(d => d.PhotoID));
       // 4) video
       if (video) {
         if (video.isNew && video.file) fd.append("videos", video.file);
