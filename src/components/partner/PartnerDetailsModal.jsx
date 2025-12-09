@@ -207,7 +207,7 @@ export default function PartnerDetailsModal({ partnerId, isOpen, onClose, onSave
   isNew: false,
 }));
 
-//console.log("Loaded photos from backend:", existingPhotos.map(p => p.PhotoID));
+console.log("Loaded photos from backend:", existingPhotos.map(p => p.PhotoID));
 setPhotos(existingPhotos);
 
         //setPhotos((p.photos || []).map((ph) => ({ ...ph, isNew: false })));
@@ -366,7 +366,8 @@ if (keepDocs.length === 0) {
       } else {
         keptPhotos.forEach((p) => fd.append("existingPhotos[]", String(p.PhotoID)));
       }
-      //photos.filter((p) => p.isNew && p.file).forEach((p) => fd.append("photos", p.file));
+      
+      photos.filter((p) => p.isNew && p.file).forEach((p) => fd.append("photos", p.file));
       //console.log("FD: existingPhotos[]", keptPhotos.map(d => d.PhotoID));
       // 4) video
       if (video) {
