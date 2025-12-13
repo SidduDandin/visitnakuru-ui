@@ -74,6 +74,11 @@ const navItems = [
     path: "/admin/packages",
   },
 
+   {
+    icon:  <ListIcon />,
+    name: "Manage Explore Nakuru",
+    path: "/admin/explore",
+  },
   // {
   //   name:"User Management",
   //   icon :<UserCircleIcon/>,

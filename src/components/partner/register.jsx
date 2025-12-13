@@ -139,7 +139,7 @@ export default function PartnerOnboarding({ apiUrl, userAuthToken, user }) {
 
   // When category (parent) changes, fetch its subcategories
   useEffect(() => {
-    const parentId = watch("category");
+    const parentId = Number(watch("category"));
     if (!parentId) {
       setSubCategories([]);
       return;
