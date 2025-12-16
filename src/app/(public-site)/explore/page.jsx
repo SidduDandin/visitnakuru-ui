@@ -66,7 +66,7 @@ export default async function ExplorePage() {
             Home
           </Link>
           <span>|</span>
-          <Link href="#" className="font-semibold hover:underline">
+          <Link href="/explore" className="font-semibold hover:underline">
             Things To Do
           </Link>
           <span>|</span>
@@ -76,9 +76,7 @@ export default async function ExplorePage() {
         <h1 className="mb-4">Explore Nakuru</h1>
 
         <p className="text-gray-600 leading-relaxed">
-          Discover the best of Nakuru — from wildlife experiences and scenic
-          landscapes to trusted tour operators, travel agencies, and unique
-          local adventures waiting to be explored.
+         {explores[0].shortDesc}
         </p>
       </div>
 

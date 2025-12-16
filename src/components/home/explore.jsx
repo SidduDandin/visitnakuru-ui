@@ -48,7 +48,7 @@ export default function Explore() {
       <div className="container">
         <div className="flex items-center justify-between mb-5">
           <h2>Explore Nakuru</h2>
-          <Link href="#" className="md:inline-block hidden">
+          <Link href="/explore" className="md:inline-block hidden">
             View All
           </Link>
         </div>
@@ -62,8 +62,8 @@ export default function Explore() {
             return (
               <Link
                 key={item.id}
-                // href={`/explore/${item.slug}`}
-                href="#"
+                href={`/explore/${item.slug}`}
+                // href="#"
                 className="block"
               >
                 <div className="relative pb-[65%] overflow-hidden mb-5">
