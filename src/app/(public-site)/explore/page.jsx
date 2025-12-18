@@ -97,6 +97,7 @@ export default async function ExplorePage() {
                   alt={item.title}
                   fill
                   className="object-cover"
+                  unoptimized
                   loading="lazy"
                 />
               </div>

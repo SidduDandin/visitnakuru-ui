@@ -40,6 +40,7 @@ export default async function ExploreDetailPage({ params }) {
             width={1920}
             height={1080}
             priority
+            unoptimized
             className="w-full h-auto block"
           />
         </div>

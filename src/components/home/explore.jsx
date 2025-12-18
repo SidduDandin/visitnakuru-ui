@@ -71,6 +71,7 @@ export default function Explore() {
                     src={imageSrc}
                     alt={item.title}
                     fill
+                    unoptimized
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 25vw"
                   />
