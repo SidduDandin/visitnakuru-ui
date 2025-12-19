@@ -10,7 +10,7 @@ const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export default function EventListTable({
   events = [],
-  isLoading = false,
+  loading = false,
   onApprove,
   onBlock,
   onDelete,
@@ -135,7 +135,7 @@ export default function EventListTable({
             </thead>
 
             <tbody>
-              {isLoading ? (
+              {loading ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center">
                     Loading…
