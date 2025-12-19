@@ -74,6 +74,12 @@ const navItems = [
     path: "/admin/packages",
   },
 
+  {
+    icon:  <ListIcon />,
+    name: "Manage Events",
+    path: "/admin/events",
+  },
+
    {
     icon:  <ListIcon />,
     name: "Manage Explore Nakuru",
@@ -112,11 +118,11 @@ const navItems = [
   // },
 
 
-  {
-    icon:  <ListIcon />,
-    name: "Manage Business Partners",
-    path: "/admin/partners",
-  },
+  // {
+  //   icon:  <ListIcon />,
+  //   name: "Manage Business Partners",
+  //   path: "/admin/partners",
+  // },
 
   
   // {

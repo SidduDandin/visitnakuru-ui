@@ -39,7 +39,8 @@ export default function ExploreTable({
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+      <h2 className="text-2xl font-bold mb-4 dark:text-white">List of Explore Nakuru</h2>
       <div className="flex items-center justify-between mb-4">
         <div>
           <select className="border rounded p-2 text-sm">

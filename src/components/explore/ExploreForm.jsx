@@ -205,7 +205,7 @@ export default function ExploreForm({
       </h2>
 
       {/* Title */}
-      <label className="block font-medium mb-2">Title *</label>
+      <label className="block font-medium mb-2">Title  <span className="text-red-500">*</span></label>
       <input
         className="border p-2 w-full rounded"
         value={form.title}
@@ -214,7 +214,7 @@ export default function ExploreForm({
       {errors.title && <p className="text-red-500">{errors.title}</p>}
 
       {/* Short Description */}
-      <label className="block font-medium mb-2 mt-3">Short Description *</label>
+      <label className="block font-medium mb-2 mt-3">Short Description  <span className="text-red-500">*</span></label>
       <textarea
         rows={3}
         className="border p-2 w-full rounded"
@@ -224,7 +224,7 @@ export default function ExploreForm({
       {errors.shortDesc && <p className="text-red-500">{errors.shortDesc}</p>}
 
       {/* Image */}
-      <label className="block font-medium mb-2 mt-3">Image *</label>
+      <label className="block font-medium mb-2 mt-3">Image  <span className="text-red-500">*</span></label>
 
       <input
         id="image"
@@ -244,7 +244,7 @@ export default function ExploreForm({
       {errors.bannerImage && <p className="text-red-500">{errors.bannerImage}</p>}
 
       {/* Full Description */}
-      <label className="block font-medium mb-2 mt-3">Full Description *</label>
+      <label className="block font-medium mb-2 mt-3">Full Description  <span className="text-red-500">*</span></label>
 
       <Editor
         key={editorKey}
