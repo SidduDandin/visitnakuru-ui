@@ -150,7 +150,7 @@ export default function EventTable({
                           View
                         </button>
 
-                        {event.Status !== 9 && (
+                        {event.Status !== 9 && event.Status !== 7 && (
                           <button
                             className="bg-blue-500 text-white px-3 py-1 rounded"
                             onClick={() => onEdit(event.EventID)}
@@ -162,7 +162,7 @@ export default function EventTable({
                         <button
                           className="bg-red-500 text-white px-3 py-1 rounded"
                           onClick={() => {
-                            if (confirm("Delete this event?")) {
+                            if (confirm("Are you sure you want to delete this event?")) {
                               onDelete(event.EventID);
                             }
                           }}

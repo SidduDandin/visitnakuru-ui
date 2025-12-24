@@ -47,7 +47,7 @@ export default function Header() {
     supportedLangs.find((l) => l.code === lang) || supportedLangs[0];
 
   const partners = user?.partners || [];
-  console.log("DASHBOARD PARTNERS:", user?.partners);
+
 /* ⭐ EVENT PARTNER */
 const eventPartner = partners.find(
   (p) => p.BusinessCategory === "Events and Conferences"

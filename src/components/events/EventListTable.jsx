@@ -182,16 +182,23 @@ export default function EventListTable({
                         </td>
 
                         <td className="px-4 py-4">
-                          {event.IsSignature ? "Signature" : "Regular"}
+                         {event.IsSignature ? ( <span className="text-purple-600 font-semibold"> Signature </span> ) : ( <span className="text-blue-600">Regular</span> )}
                         </td>
 
-                        <td className="px-4 py-4">
-                          {event.Status === 1 && "Pending"}
-                          {event.Status === 5 && "Active"}
-                          {event.Status === 7 && "Blocked"}
-                          {event.Status === 9 && "Expired"}
-                        </td>
-
+                       <td className="px-4 py-4">
+                      {event.Status === 1 && (
+                        <span className="text-orange-500">Pending</span>
+                      )}
+                      {event.Status === 5 && (
+                        <span className="text-green-600">Active</span>
+                      )}
+                      {event.Status === 7 && (
+                        <span className="text-red-600">Blocked</span>
+                      )}
+                      {event.Status === 9 && (
+                        <span className="text-red-500">Expired</span>
+                      )}
+                    </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
                             <button
@@ -201,7 +208,7 @@ export default function EventListTable({
                               View
                             </button>
 
-                            {event.Status !== 9 && (
+                            {event.Status !== 9 && event.Status !== 7 && (
                               <button
                                 className="bg-blue-500 text-white px-3 py-1 rounded"
                                 onClick={() =>
