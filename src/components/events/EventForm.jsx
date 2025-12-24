@@ -10,7 +10,10 @@ export default function EventForm({
   editingEvent,
   onCancel,
   handleAuthError,
+  mode = "admin", // 🔥 NEW: "admin" | "partner"
 }) {
+  const isAdmin = mode === "admin";
+
   const [saving, setSaving] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [editorKey, setEditorKey] = useState("editor-new");
@@ -27,7 +30,6 @@ export default function EventForm({
     startDate: null,
     endDate: null,
     images: [],
-    isSignature: true, // ADMIN → ALWAYS TRUE
   });
 
   const [previewImages, setPreviewImages] = useState([]);
@@ -37,37 +39,39 @@ export default function EventForm({
   // LOAD EDIT MODE
   // ======================================================
   useEffect(() => {
-    if (editingEvent) {
-      setForm({
-        title: editingEvent.Title || "",
-        shortDesc: editingEvent.ShortDesc || "",
-        description: editingEvent.Description || "",
-        venue: editingEvent.Venue || "",
-        bookingLink: editingEvent.BookingLink || "",
-        startDate: editingEvent.StartDate
-          ? new Date(editingEvent.StartDate)
-          : null,
-        endDate: editingEvent.EndDate
-          ? new Date(editingEvent.EndDate)
-          : null,
-        images: [],
-        isSignature: true,
-      });
-
-      if (editingEvent.images?.length) {
-        setPreviewImages(
-          editingEvent.images.map(
-            (img) => `${backendUrl}/images/events/${img.FilePath}`
-          )
-        );
-      }
-
-      setEditorKey(`editor-${editingEvent.EventID}`);
+    if (!editingEvent) {
+      setEditorLoaded(false);
+      setTimeout(() => setEditorLoaded(true), 50);
+      return;
     }
 
+    setForm({
+      title: editingEvent.Title || "",
+      shortDesc: editingEvent.ShortDesc || "",
+      description: editingEvent.Description || "",
+      venue: editingEvent.Venue || "",
+      bookingLink: editingEvent.BookingLink || "",
+      startDate: editingEvent.StartDate
+        ? new Date(editingEvent.StartDate)
+        : null,
+      endDate: editingEvent.EndDate
+        ? new Date(editingEvent.EndDate)
+        : null,
+      images: [],
+    });
+
+    if (editingEvent.images?.length) {
+      setPreviewImages(
+        editingEvent.images.map(
+          (img) => `${backendUrl}/images/events/${img.FilePath}`
+        )
+      );
+    }
+
+    setEditorKey(`editor-${editingEvent.EventID}`);
     setEditorLoaded(false);
     setTimeout(() => setEditorLoaded(true), 50);
-  }, [editingEvent]);
+  }, [editingEvent, backendUrl]);
 
   // ======================================================
   // VALIDATION
@@ -87,11 +91,7 @@ export default function EventForm({
     if (!form.startDate) e.startDate = "Start date is required";
     if (!form.endDate) e.endDate = "End date is required";
 
-    if (
-      form.startDate &&
-      form.endDate &&
-      form.endDate < form.startDate
-    ) {
+    if (form.startDate && form.endDate && form.endDate < form.startDate) {
       e.endDate = "End date cannot be before start date";
     }
 
@@ -130,15 +130,24 @@ export default function EventForm({
       fd.append("Description", form.description);
       fd.append("Venue", form.venue);
       fd.append("BookingLink", form.bookingLink);
-      fd.append("IsSignature", "true");
       fd.append("StartDate", form.startDate.toISOString());
       fd.append("EndDate", form.endDate.toISOString());
 
+      // 🔥 ADMIN ONLY
+      if (isAdmin) {
+        fd.append("IsSignature", "true");
+      }
+
       form.images.forEach((img) => fd.append("images", img));
 
-      const url = editingEvent
-        ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
-        : `${backendUrl}/api/events/admin/signature`;
+      // 🔥 API SWITCH
+      const url = isAdmin
+        ? editingEvent
+          ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
+          : `${backendUrl}/api/events/admin/signature`
+        : editingEvent
+        ? `${backendUrl}/api/events/partner/${editingEvent.EventID}`
+        : `${backendUrl}/api/events/partner`;
 
       const res = await fetch(url, {
         method: editingEvent ? "PUT" : "POST",
@@ -146,12 +155,13 @@ export default function EventForm({
         body: fd,
       });
 
-      if (res.status === 401) return handleAuthError();
+      if (res.status === 401 && handleAuthError) return handleAuthError();
       if (!res.ok) throw new Error(await res.text());
 
-      window.location.href = `/admin/events?${
-        editingEvent ? "updated=1" : "added=1"
-      }`;
+      // 🔥 REDIRECT SWITCH
+      window.location.href = isAdmin
+        ? `/admin/events?${editingEvent ? "updated=1" : "added=1"}`
+        : `/events?${editingEvent ? "updated=1" : "added=1"}`;
     } catch (err) {
       alert(err.message);
     }
@@ -160,7 +170,7 @@ export default function EventForm({
   };
 
   // ======================================================
-  // EDITOR TOOLBAR
+  // EDITOR TOOLBAR (UNCHANGED)
   // ======================================================
   const editorHeader = (
     <span className="ql-formats">
@@ -171,23 +181,23 @@ export default function EventForm({
         <option value="0">Normal</option>
       </select>
 
-         <select className="ql-font" defaultValue="sans-serif">
-            <option value="sans-serif">Sans Serif</option>
-            <option value="serif">Serif</option>
-            <option value="monospace">Monospace</option>
-        </select>
+      <select className="ql-font" defaultValue="sans-serif">
+        <option value="sans-serif">Sans Serif</option>
+        <option value="serif">Serif</option>
+        <option value="monospace">Monospace</option>
+      </select>
 
-        <button className="ql-bold"></button>
-        <button className="ql-italic"></button>
-        <button className="ql-underline"></button>
-        <select className="ql-color"></select>
-        <select className="ql-background"></select>
-        <button className="ql-list" value="ordered"></button>
-        <button className="ql-list" value="bullet"></button>
-        <select className="ql-align"></select>
-        <button className="ql-link"></button>
-        <button className="ql-image"></button>
-        <button className="ql-clean"></button>
+      <button className="ql-bold" />
+      <button className="ql-italic" />
+      <button className="ql-underline" />
+      <select className="ql-color" />
+      <select className="ql-background" />
+      <button className="ql-list" value="ordered" />
+      <button className="ql-list" value="bullet" />
+      <select className="ql-align" />
+      <button className="ql-link" />
+      <button className="ql-image" />
+      <button className="ql-clean" />
     </span>
   );
 
@@ -335,7 +345,8 @@ export default function EventForm({
 
       {/* ACTIONS */}
       <div className="flex gap-3 mt-6">
-        <button
+        {isAdmin &&
+          <button
           onClick={handleSave}
           className="bg-brand-500 text-white px-6 py-3 rounded"
         >
@@ -344,8 +355,18 @@ export default function EventForm({
             : editingEvent
             ? "Update Event"
             : "Add Event"}
-        </button>
-
+            </button>
+       }
+       <button
+          onClick={handleSave}
+          className="btn btn-primary text-white font-semibold py-3 rounded transition"
+        >
+          {saving
+            ? "Saving…"
+            : editingEvent
+            ? "Update Event"
+            : "Add Event"}
+            </button>
         <button className="border px-6 py-3 rounded" onClick={onCancel}>
           Cancel
         </button>

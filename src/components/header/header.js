@@ -14,6 +14,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useTranslation } from "react-i18next";
 import { parseCookies, destroyCookie } from "nookies";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   // ======== State ========
@@ -22,7 +23,7 @@ export default function Header() {
   const [menuDeskOpen, setMenuDeskOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
-  const protectedUserPaths = ["/dashboard", "/business/register", "/settings"];
+  const protectedUserPaths = ["/dashboard", "/business/register", "/settings",'/events'];
   const isProtectedPage = protectedUserPaths.some((p) =>
     pathname.startsWith(p)
   );
@@ -32,7 +33,7 @@ export default function Header() {
   const { lang, changeLanguage, isMounted } = useLanguage();
   const { t } = useTranslation();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
+  const router = useRouter();
   // Supported languages
   const supportedLangs = [
     { code: "en", name: "English", short: "EN" },
@@ -44,6 +45,18 @@ export default function Header() {
 
   const currentLang =
     supportedLangs.find((l) => l.code === lang) || supportedLangs[0];
+
+  const partners = user?.partners || [];
+  console.log("DASHBOARD PARTNERS:", user?.partners);
+/* ⭐ EVENT PARTNER */
+const eventPartner = partners.find(
+  (p) => p.BusinessCategory === "Events and Conferences"
+);
+
+const isEventPartner = Boolean(eventPartner);
+const isSubscriptionExpired = Boolean(eventPartner?.IsSubscriptionExpired);
+const eventCount = eventPartner?.EventCount ?? 0;
+
 
   // ======== Prevent scroll when mobile menu open ========
   useEffect(() => {
@@ -76,7 +89,10 @@ export default function Header() {
         if (res.ok) {
           const data = await res.json();
           setIsLoggedIn(true);
-          setUser(data.user);
+           setUser({
+        ...data.user,
+        partners: data.partners, // ⭐ IMPORTANT
+      });
         } else {
           setIsLoggedIn(false);
           setUser(null);
@@ -96,6 +112,8 @@ export default function Header() {
     setUser(null);
     window.location.href = "/login";
   };
+  // ======================================================
+ 
 
   return (
     <header className="relative z-50 md:pr-7 pr-4 text-[16px]">
@@ -221,6 +239,40 @@ export default function Header() {
         {t("userMenu.listMyBusiness")}
       </Link>
     </MenuItem>
+{/* ⭐ ADD EVENT (ONLY EVENT PARTNERS) */}
+{isEventPartner && (
+  <MenuItem>
+    <button
+      onClick={() => router.push("/events")}
+      disabled={isSubscriptionExpired}
+      title={
+        isSubscriptionExpired
+          ? "Subscription expired"
+          : "Add new event"
+      }
+      className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between rounded
+        ${
+          isSubscriptionExpired
+            ? "text-gray-400 cursor-not-allowed bg-gray-50"
+            : "text-primary hover:bg-gray-50"
+        }`}
+    >
+      <span>Manage Events</span>
+
+      {/* EVENT COUNT BADGE */}
+      <span
+        className={`ml-2 text-xs px-2 py-0.5 rounded-full
+          ${
+            isSubscriptionExpired
+              ? "bg-gray-300 text-white"
+              : "bg-primary text-white"
+          }`}
+      >
+        {eventCount}
+      </span>
+    </button>
+  </MenuItem>
+)}
 
     <MenuItem>
       <button
@@ -258,6 +310,40 @@ export default function Header() {
                     <MenuItem>
                       <Link href="/business/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">List My Business</Link>
                     </MenuItem>
+                    {/* ⭐ ADD EVENT (ONLY FOR EVENT PARTNERS) */}
+                    {isEventPartner && (
+  <MenuItem>
+    <button
+      onClick={() => router.push("/events")}
+      disabled={isSubscriptionExpired}
+      title={
+        isSubscriptionExpired
+          ? "Subscription expired"
+          : "Add new event"
+      }
+      className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between rounded
+        ${
+          isSubscriptionExpired
+            ? "text-gray-400 cursor-not-allowed bg-gray-50"
+            : "text-primary hover:bg-gray-50"
+        }`}
+    >
+      <span>Manage Events</span>
+
+      {/* EVENT COUNT BADGE */}
+      <span
+        className={`ml-2 text-xs px-2 py-0.5 rounded-full
+          ${
+            isSubscriptionExpired
+              ? "bg-gray-300 text-white"
+              : "bg-primary text-white"
+          }`}
+      >
+        {eventCount}
+      </span>
+    </button>
+  </MenuItem>
+)}
                     <MenuItem>
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Logout</button>
                     </MenuItem>

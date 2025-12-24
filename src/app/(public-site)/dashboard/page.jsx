@@ -245,6 +245,9 @@ return (
                            {activeTab === "inProgress" && b.Status === 2 && (
                       <button onClick={() => openAddDetailsModal(b.PartnerID)} className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Add Details</button>
                     )}
+                       {activeTab === "inProgress" && b.Status !== 2 && (
+                      <button onClick={() => openAddDetailsModal(b.PartnerID)} className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">View Details</button>
+                    )}
                     </div>
                       </div>
 

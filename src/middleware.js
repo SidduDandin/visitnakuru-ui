@@ -18,7 +18,7 @@ export async function middleware(req) {
     '/login',
     '/register','/forgot-password','reset-password',
   ];
-  const protectedUserPaths = ['/dashboard', '/business/register','/settings'];
+  const protectedUserPaths = ['/dashboard', '/business/register','/settings','/events'];
 
 
 //new 
