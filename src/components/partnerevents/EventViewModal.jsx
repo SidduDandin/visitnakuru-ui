@@ -1,22 +1,20 @@
 "use client";
 
-import { formatEventDate } from "@/components/events/dateUtils";
+import { formatEventRange } from "@/components/events/dateUtils";
 
 export default function EventViewModal({ event, onClose }) {
   if (!event) return null;
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-  const images = event.images || [];
-  const cover =
-    images.find((img) => img.IsCover === true) || images[0];
+ const images = Array.isArray(event.images) ? event.images : [];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
       <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
         
         {/* HEADER */}
-        <div className="flex justify-between items-center px-6 py-4 border-b">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-300">
           <h2 className="text-lg font-semibold">Event Details</h2>
           <button
             onClick={onClose}
@@ -34,7 +32,7 @@ export default function EventViewModal({ event, onClose }) {
             <Detail label="Title" value={event.Title} />
             <Detail
               label="Event Type"
-              value={event.IsSignature ? "Signature Event" : "Partner Event"}
+              value={event.IsSignature ? "Signature Event" : "Regular"}
             />
             <Detail
               label="Status"
@@ -67,21 +65,40 @@ export default function EventViewModal({ event, onClose }) {
             />
             <Detail
               label="Date"
-              value={formatEventDate(event.StartDate, event.EndDate)}
+              value={formatEventRange(event.StartDate, event.EndDate)}
             />
            
           </div>
 
-          {/* IMAGE */}
-          {cover && (
-            <div>
-              <p className="font-semibold mb-2">Image</p>
-              <img
-                src={`${backendUrl}/images/events/${cover.FilePath}`}
-                className="w-64 h-40 object-cover rounded border"
-              />
-            </div>
-          )}
+            {/* IMAGES GRID */}
+          <div className="">
+            
+            <p className="font-semibold mb-1">Event Images</p>
+            {images.length ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {images.map((img) => (
+                  <div
+                    key={img.ImageID}
+                    className="relative border rounded-lg overflow-hidden group"
+                  >
+                    <img
+                      src={`${backendUrl}/images/events/${img.FilePath}`}
+                      alt={event.Title}
+                      className="w-full h-40 object-cover"
+                    />
+
+                    {img.IsCover && (
+                      <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                        Cover
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No images available</p>
+            )}
+          </div>
 
           {/* SHORT DESCRIPTION */}
           <div>

@@ -47,7 +47,7 @@ export default function Header() {
     supportedLangs.find((l) => l.code === lang) || supportedLangs[0];
 
   const partners = user?.partners || [];
-  console.log("DASHBOARD PARTNERS:", user?.partners);
+
 /* ⭐ EVENT PARTNER */
 const eventPartner = partners.find(
   (p) => p.BusinessCategory === "Events and Conferences"
@@ -138,7 +138,7 @@ const eventCount = eventPartner?.EventCount ?? 0;
           {(isLoggedIn && !isProtectedPage) && (
             <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
               <li><Link href="/">{t("nav.home")}</Link></li>
-              <li><Link href="#">{t("nav.whatsOn")}</Link></li>
+              <li><Link href="/whats-on">{t("nav.whatsOn")}</Link></li>
               <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
               <li><Link href="#">{t("nav.foodDrink")}</Link></li>
               <li><Link href="#">{t("nav.shopping")}</Link></li>
@@ -148,7 +148,7 @@ const eventCount = eventPartner?.EventCount ?? 0;
           {(!isLoggedIn && !isProtectedPage) && (
             <ul className="hidden xl:flex flex-wrap justify-center items-center p-0 m-0 list-none gap-6 mr-4 grow-[0.3] [&_a]:transition [&_a]:hover:text-black">
               <li><Link href="/">{t("nav.home")}</Link></li>
-              <li><Link href="#">{t("nav.whatsOn")}</Link></li>
+              <li><Link href="/whats-on">{t("nav.whatsOn")}</Link></li>
               <li><Link href="#">{t("nav.thingsToDo")}</Link></li>
               <li><Link href="#">{t("nav.foodDrink")}</Link></li>
               <li><Link href="#">{t("nav.shopping")}</Link></li>

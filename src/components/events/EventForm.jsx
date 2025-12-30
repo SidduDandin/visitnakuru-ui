@@ -10,9 +10,10 @@ export default function EventForm({
   editingEvent,
   onCancel,
   handleAuthError,
-  mode = "admin", // 🔥 NEW: "admin" | "partner"
+  mode = "admin",
 }) {
   const isAdmin = mode === "admin";
+  const isEdit = Boolean(editingEvent);
 
   const [saving, setSaving] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
@@ -29,15 +30,16 @@ export default function EventForm({
     bookingLink: "",
     startDate: null,
     endDate: null,
-    images: [],
   });
 
-  const [previewImages, setPreviewImages] = useState([]);
+  /* IMAGE STATES */
+  const [existingImages, setExistingImages] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+
   const [errors, setErrors] = useState({});
 
-  // ======================================================
-  // LOAD EDIT MODE
-  // ======================================================
+  /* ================= LOAD EDIT MODE ================= */
   useEffect(() => {
     if (!editingEvent) {
       setEditorLoaded(false);
@@ -57,25 +59,18 @@ export default function EventForm({
       endDate: editingEvent.EndDate
         ? new Date(editingEvent.EndDate)
         : null,
-      images: [],
     });
 
-    if (editingEvent.images?.length) {
-      setPreviewImages(
-        editingEvent.images.map(
-          (img) => `${backendUrl}/images/events/${img.FilePath}`
-        )
-      );
-    }
+    setExistingImages(editingEvent.images || []);
+    setRemovedImageIds([]);
+    setNewImages([]);
 
     setEditorKey(`editor-${editingEvent.EventID}`);
     setEditorLoaded(false);
     setTimeout(() => setEditorLoaded(true), 50);
-  }, [editingEvent, backendUrl]);
+  }, [editingEvent]);
 
-  // ======================================================
-  // VALIDATION
-  // ======================================================
+  /* ================= VALIDATION ================= */
   const validate = () => {
     const e = {};
 
@@ -91,31 +86,36 @@ export default function EventForm({
     if (!form.startDate) e.startDate = "Start date is required";
     if (!form.endDate) e.endDate = "End date is required";
 
-    if (form.startDate && form.endDate && form.endDate < form.startDate) {
+    if (form.startDate && form.endDate < form.startDate) {
       e.endDate = "End date cannot be before start date";
     }
 
-    if (!editingEvent && previewImages.length === 0) {
+    if (!isEdit && existingImages.length === 0 && newImages.length === 0) {
       e.images = "At least one image is required";
     }
 
     return e;
   };
 
-  // ======================================================
-  // IMAGE UPLOAD
-  // ======================================================
-  const handleImageSelect = (e) => {
+  /* ================= IMAGE HANDLERS ================= */
+  const addNewImages = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-
-    setForm((prev) => ({ ...prev, images: files }));
-    setPreviewImages(files.map((f) => URL.createObjectURL(f)));
+    setNewImages((prev) => [...prev, ...files]);
   };
 
-  // ======================================================
-  // SAVE
-  // ======================================================
+  const removeExistingImage = (img) => {
+    setExistingImages((prev) =>
+      prev.filter((i) => i.ImageID !== img.ImageID)
+    );
+    setRemovedImageIds((prev) => [...prev, img.ImageID]);
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  /* ================= SAVE ================= */
   const handleSave = async () => {
     const v = validate();
     setErrors(v);
@@ -133,24 +133,20 @@ export default function EventForm({
       fd.append("StartDate", form.startDate.toISOString());
       fd.append("EndDate", form.endDate.toISOString());
 
-      // 🔥 ADMIN ONLY
-      if (isAdmin) {
-        fd.append("IsSignature", "true");
-      }
+      if (isAdmin) fd.append("IsSignature", "true");
 
-      form.images.forEach((img) => fd.append("images", img));
+       removedImageIds.forEach((id) =>
+  fd.append("removedImageIds", id)
+);
 
-      // 🔥 API SWITCH
+      newImages.forEach((img) => fd.append("images", img));
+
       const url = isAdmin
-        ? editingEvent
-          ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
-          : `${backendUrl}/api/events/admin/signature`
-        : editingEvent
-        ? `${backendUrl}/api/events/partner/${editingEvent.EventID}`
-        : `${backendUrl}/api/events/partner`;
+        ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
+        : `${backendUrl}/api/events/partner/${editingEvent.EventID}`;
 
       const res = await fetch(url, {
-        method: editingEvent ? "PUT" : "POST",
+        method: "PUT",
         headers: { "x-auth-token": authToken },
         body: fd,
       });
@@ -158,7 +154,6 @@ export default function EventForm({
       if (res.status === 401 && handleAuthError) return handleAuthError();
       if (!res.ok) throw new Error(await res.text());
 
-      // 🔥 REDIRECT SWITCH
       window.location.href = isAdmin
         ? `/admin/events?${editingEvent ? "updated=1" : "added=1"}`
         : `/events?${editingEvent ? "updated=1" : "added=1"}`;
@@ -169,50 +164,16 @@ export default function EventForm({
     setSaving(false);
   };
 
-  // ======================================================
-  // EDITOR TOOLBAR (UNCHANGED)
-  // ======================================================
-  const editorHeader = (
-    <span className="ql-formats">
-      <select className="ql-header" defaultValue="0">
-        <option value="1">Heading 1</option>
-        <option value="2">Heading 2</option>
-        <option value="3">Heading 3</option>
-        <option value="0">Normal</option>
-      </select>
-
-      <select className="ql-font" defaultValue="sans-serif">
-        <option value="sans-serif">Sans Serif</option>
-        <option value="serif">Serif</option>
-        <option value="monospace">Monospace</option>
-      </select>
-
-      <button className="ql-bold" />
-      <button className="ql-italic" />
-      <button className="ql-underline" />
-      <select className="ql-color" />
-      <select className="ql-background" />
-      <button className="ql-list" value="ordered" />
-      <button className="ql-list" value="bullet" />
-      <select className="ql-align" />
-      <button className="ql-link" />
-      <button className="ql-image" />
-      <button className="ql-clean" />
-    </span>
-  );
-
-  if (!editorLoaded) return <p>Loading editor…</p>;
+  if (!editorLoaded) return null;
 
   return (
     <div className="bg-white p-6 rounded shadow max-w-5xl">
       <h2 className="text-xl font-semibold mb-4">
-        {editingEvent ? "Edit Event" : "Add New Event"}
+        {isEdit ? "Edit Event" : "Add New Event"}
       </h2>
 
       {/* TITLE */}
-      <label className="font-medium">Title 
-        <span className="text-red-500">*</span>
-      </label>
+      <label className="font-medium">Title *</label>
       <input
         className="border p-2 w-full rounded"
         value={form.title}
@@ -221,41 +182,68 @@ export default function EventForm({
       {errors.title && <p className="text-red-500">{errors.title}</p>}
 
       {/* SHORT DESC */}
-      <label className="font-medium mt-3 block">Short Description <span className="text-red-500">*</span></label>
+      <label className="font-medium mt-3 block">Short Description *</label>
       <textarea
         className="border p-2 w-full rounded"
         rows={3}
         value={form.shortDesc}
-        onChange={(e) => setForm({ ...form, shortDesc: e.target.value })}
+        onChange={(e) =>
+          setForm({ ...form, shortDesc: e.target.value })
+        }
       />
-      {errors.shortDesc && <p className="text-red-500">{errors.shortDesc}</p>}
+      {errors.shortDesc && (
+        <p className="text-red-500">{errors.shortDesc}</p>
+      )}
 
       {/* IMAGES */}
-      <label className="font-medium mt-3 block">Images <span className="text-red-500">*</span></label>
+      <label className="font-medium mt-3 block">Images *</label>
       <input
         type="file"
         multiple
-        accept=".jpg,.jpeg,.png,.webp"
-        className="block w-full rounded border p-2 text-sm"
-        onChange={handleImageSelect}
+        accept="image/*"
+        className="border p-2 w-full rounded"
+        onChange={addNewImages}
       />
-      {errors.images && <p className="text-red-500">{errors.images}</p>}
+      {errors.images && (
+        <p className="text-red-500">{errors.images}</p>
+      )}
 
-      <div className="flex gap-3 mt-3 flex-wrap">
-        {previewImages.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            className="h-28 w-40 object-cover rounded border"
-          />
+      <div className="flex flex-wrap gap-4 mt-4">
+        {existingImages.map((img) => (
+          <div key={img.ImageID} className="relative">
+            <img
+              src={`${backendUrl}/images/events/${img.FilePath}`}
+              className="h-28 w-40 object-cover rounded border"
+            />
+            <button
+              onClick={() => removeExistingImage(img)}
+              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+
+        {newImages.map((file, i) => (
+          <div key={i} className="relative">
+            <img
+              src={URL.createObjectURL(file)}
+              className="h-28 w-40 object-cover rounded border"
+            />
+            <button
+              onClick={() => removeNewImage(i)}
+              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2"
+            >
+              ×
+            </button>
+          </div>
         ))}
       </div>
 
       {/* DESCRIPTION */}
-      <label className="font-medium mt-4 block">Full Description <span className="text-red-500">*</span></label>
+      <label className="font-medium mt-4 block">Full Description *</label>
       <Editor
         key={editorKey}
-        headerTemplate={editorHeader}
         value={form.description}
         onTextChange={(e) =>
           setForm({ ...form, description: e.htmlValue || "" })
@@ -269,17 +257,18 @@ export default function EventForm({
       {/* VENUE + BOOKING */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="font-medium">Venue <span className="text-red-500">*</span></label>
+          <label className="font-medium">Venue *</label>
           <input
             className="border p-2 w-full rounded"
             value={form.venue}
-            onChange={(e) => setForm({ ...form, venue: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, venue: e.target.value })
+            }
           />
-          {errors.venue && <p className="text-red-500">{errors.venue}</p>}
         </div>
 
         <div>
-          <label className="font-medium">Booking Link <span className="text-red-500">*</span></label>
+          <label className="font-medium">Booking Link *</label>
           <input
             className="border p-2 w-full rounded"
             value={form.bookingLink}
@@ -287,64 +276,33 @@ export default function EventForm({
               setForm({ ...form, bookingLink: e.target.value })
             }
           />
-          {errors.bookingLink && (
-            <p className="text-red-500">{errors.bookingLink}</p>
-          )}
         </div>
       </div>
 
       {/* DATES */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="font-medium">Start Date <span className="text-red-500">*</span></label>
-          <Calendar
-            value={form.startDate}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                startDate: e.value,
-                endDate:
-                  form.endDate && e.value && form.endDate < e.value
-                    ? null
-                    : form.endDate,
-              })
-            }
-            showIcon
-            className="w-full"
-            dateFormat="dd M yy"
-            minDate={today}
-            monthNavigator
-            yearNavigator
-            yearRange="2024:2035"
-          />
-          {errors.startDate && (
-            <p className="text-red-500">{errors.startDate}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="font-medium">End Date <span className="text-red-500">*</span></label>
-          <Calendar
-            value={form.endDate}
-            onChange={(e) =>
-              setForm({ ...form, endDate: e.value })
-            }
-            showIcon
-            className="w-full"
-            dateFormat="dd M yy"
-            minDate={form.startDate || today}
-            monthNavigator
-            yearNavigator
-            yearRange="2024:2035"
-          />
-          {errors.endDate && (
-            <p className="text-red-500">{errors.endDate}</p>
-          )}
-        </div>
+        <Calendar
+          value={form.startDate}
+          onChange={(e) =>
+            setForm({ ...form, startDate: e.value })
+          }
+          showIcon
+          minDate={today}
+          className="w-full"
+        />
+        <Calendar
+          value={form.endDate}
+          onChange={(e) =>
+            setForm({ ...form, endDate: e.value })
+          }
+          showIcon
+          minDate={form.startDate || today}
+          className="w-full"
+        />
       </div>
 
       {/* ACTIONS */}
-      <div className="flex gap-3 mt-6">
+     <div className="flex gap-3 mt-6">
         {isAdmin &&
           <button
           onClick={handleSave}
@@ -357,7 +315,8 @@ export default function EventForm({
             : "Add Event"}
             </button>
        }
-       <button
+        { !isAdmin &&
+          <button
           onClick={handleSave}
           className="btn btn-primary text-white font-semibold py-3 rounded transition"
         >
@@ -367,6 +326,7 @@ export default function EventForm({
             ? "Update Event"
             : "Add Event"}
             </button>
+        }
         <button className="border px-6 py-3 rounded" onClick={onCancel}>
           Cancel
         </button>

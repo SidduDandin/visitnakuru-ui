@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import EventViewModal from "./EventViewModal";
-import { formatEventDate } from "./dateUtils";
+import { formatEventRange } from "./dateUtils";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -131,7 +131,7 @@ export default function EventListTable({
                   <th className="px-4 py-3">Image</th>
                   <th className="px-4 py-3">Title</th>
                   <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Event Type</th>
+                  {/* <th className="px-4 py-3">Event Type</th> */}
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
@@ -178,12 +178,12 @@ export default function EventListTable({
                         </td>
 
                         <td className="px-4 py-4">
-                          {formatEventDate(event.StartDate, event.EndDate)}
+                          {formatEventRange(event.StartDate, event.EndDate)}
                         </td>
 
-                        <td className="px-4 py-4">
+                        {/* <td className="px-4 py-4">
                          {event.IsSignature ? ( <span className="text-purple-600 font-semibold"> Signature </span> ) : ( <span className="text-blue-600">Regular</span> )}
-                        </td>
+                        </td> */}
 
                        <td className="px-4 py-4">
                       {event.Status === 1 && (
@@ -218,7 +218,8 @@ export default function EventListTable({
                                 Edit
                               </button>
                             )}
-
+                            {!event.IsSignature && event.Status === 1 && ( <button className="bg-indigo-500 text-white px-3 py-1 rounded" onClick={() => onApprove(event.EventID)} > Approve </button> )} 
+                            {!event.IsSignature && event.Status !== 7 && event.Status !== 9 && ( <button className="bg-yellow-500 text-white px-3 py-1 rounded" onClick={() => onBlock(event.EventID)} > Block </button> )}
                             <button
                               className="bg-red-500 text-white px-3 py-1 rounded"
                               onClick={() => confirmDelete(event.EventID)}

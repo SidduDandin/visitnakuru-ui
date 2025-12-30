@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import EventViewModal from "./EventViewModal";
-import { formatEventDate } from "@/components/events/dateUtils";
+import { formatEventRange } from "@/components/events/dateUtils";
 
 export default function EventTable({
   events = [],
@@ -121,7 +121,7 @@ export default function EventTable({
 
                     {/* DATE */}
                     <td className="px-4 py-4">
-                      {formatEventDate(event.StartDate, event.EndDate)}
+                      {formatEventRange(event.StartDate, event.EndDate)}
                     </td>
 
                     {/* STATUS */}

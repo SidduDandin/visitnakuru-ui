@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import EventTable from "./EventTable";
 
 export default function EventList({
@@ -11,6 +13,33 @@ export default function EventList({
   isSubscriptionExpired,
   eventCount,
 }) {
+
+  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+  if (searchParams.get("added")) {
+    setSuccessMsg("Event added successfully");
+  } else if (searchParams.get("updated")) {
+    setSuccessMsg("Event updated successfully");
+  } else if (searchParams.get("deleted")) {
+    setSuccessMsg("Event deleted successfully");
+  }
+}, [searchParams]);
+
+useEffect(() => {
+  if (!successMsg) return;
+
+  const timer = setTimeout(() => {
+    setSuccessMsg("");
+    router.replace("/events");
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, [successMsg, router]);
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -54,6 +83,11 @@ export default function EventList({
       </div>
 
       <div className="bg-white rounded-xl shadow p-6">
+        {successMsg && (
+          <div className="mb-4 bg-green-100 text-green-800 px-4 py-3 rounded">
+            {successMsg}
+          </div>
+        )}
         <h2 className="text-xl font-bold mb-4">List of Events</h2>
 
         <EventTable

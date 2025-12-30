@@ -1,16 +1,21 @@
-export function formatEventDate(start, end) {
+export function formatEventRange(start, end) {
   const s = new Date(start);
   const e = end ? new Date(end) : null;
 
-  const suffix = d =>
-    d > 3 && d < 21 ? "th" : ["th", "st", "nd", "rd"][d % 10] || "th";
+  const day1 = s.getUTCDate();
+  const day2 = e?.getUTCDate();
 
-  const day1 = s.getDate();
-  const month = s.toLocaleString("en", { month: "short" });
-  const year = s.getFullYear().toString().slice(-2);
+  const month = s.toLocaleString("en-US", {
+    month: "short",
+    timeZone: "UTC"
+  });
 
-  if (!e) return `${day1}${suffix(day1)} ${month} ${year}`;
+  const year = s.toLocaleString("en-US", {
+    year: "2-digit",
+    timeZone: "UTC"
+  });
 
-  const day2 = e.getDate();
-  return `${day1}${suffix(day1)} – ${day2}${suffix(day2)} ${month} ${year}`;
+  return e
+    ? `${day1}th - ${day2}th\n${month} ${year}`
+    : `${day1}th\n${month} ${year}`;
 }
