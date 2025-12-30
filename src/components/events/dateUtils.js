@@ -1,21 +1,22 @@
 export function formatEventRange(start, end) {
-  const s = new Date(start);
-  const e = end ? new Date(end) : null;
+  if (!start) return "";
 
-  const day1 = s.getUTCDate();
-  const day2 = e?.getUTCDate();
+  const startDate = new Date(start);
+  const endDate = end ? new Date(end) : null;
 
-  const month = s.toLocaleString("en-US", {
-    month: "short",
-    timeZone: "UTC"
-  });
+  const format = (date) =>
+    date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+      timeZone: "UTC",
+    });
 
-  const year = s.toLocaleString("en-US", {
-    year: "2-digit",
-    timeZone: "UTC"
-  });
+  // If range and dates differ
+  if (endDate && startDate.toDateString() !== endDate.toDateString()) {
+    return `${format(startDate)} - ${format(endDate)}`;
+  }
 
-  return e
-    ? `${day1}th - ${day2}th\n${month} ${year}`
-    : `${day1}th\n${month} ${year}`;
+  // Single-day event
+  return format(startDate);
 }

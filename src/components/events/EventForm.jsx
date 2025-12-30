@@ -22,6 +22,7 @@ export default function EventForm({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  /* FORM */
   const [form, setForm] = useState({
     title: "",
     shortDesc: "",
@@ -32,7 +33,7 @@ export default function EventForm({
     endDate: null,
   });
 
-  /* IMAGE STATES */
+  /* IMAGE STATE */
   const [existingImages, setExistingImages] = useState([]);
   const [removedImageIds, setRemovedImageIds] = useState([]);
   const [newImages, setNewImages] = useState([]);
@@ -42,8 +43,7 @@ export default function EventForm({
   /* ================= LOAD EDIT MODE ================= */
   useEffect(() => {
     if (!editingEvent) {
-      setEditorLoaded(false);
-      setTimeout(() => setEditorLoaded(true), 50);
+      setEditorLoaded(true);
       return;
     }
 
@@ -66,8 +66,7 @@ export default function EventForm({
     setNewImages([]);
 
     setEditorKey(`editor-${editingEvent.EventID}`);
-    setEditorLoaded(false);
-    setTimeout(() => setEditorLoaded(true), 50);
+    setEditorLoaded(true);
   }, [editingEvent]);
 
   /* ================= VALIDATION ================= */
@@ -90,7 +89,7 @@ export default function EventForm({
       e.endDate = "End date cannot be before start date";
     }
 
-    if (!isEdit && existingImages.length === 0 && newImages.length === 0) {
+    if (!isEdit && newImages.length === 0) {
       e.images = "At least one image is required";
     }
 
@@ -135,18 +134,31 @@ export default function EventForm({
 
       if (isAdmin) fd.append("IsSignature", "true");
 
-       removedImageIds.forEach((id) =>
-  fd.append("removedImageIds", id)
-);
+      /* 🔥 IMPORTANT: correct array key */
+      removedImageIds.forEach((id) =>
+        fd.append("removedImageIds[]", id)
+      );
 
       newImages.forEach((img) => fd.append("images", img));
 
-      const url = isAdmin
-        ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
-        : `${backendUrl}/api/events/partner/${editingEvent.EventID}`;
+      /* 🔥 FIXED API SWITCH */
+      let url = "";
+      let method = "";
+
+      if (isEdit) {
+        url = isAdmin
+          ? `${backendUrl}/api/events/admin/${editingEvent.EventID}`
+          : `${backendUrl}/api/events/partner/${editingEvent.EventID}`;
+        method = "PUT";
+      } else {
+        url = isAdmin
+          ? `${backendUrl}/api/events/admin/signature`
+          : `${backendUrl}/api/events/partner`;
+        method = "POST";
+      }
 
       const res = await fetch(url, {
-        method: "PUT",
+        method,
         headers: { "x-auth-token": authToken },
         body: fd,
       });
@@ -155,8 +167,8 @@ export default function EventForm({
       if (!res.ok) throw new Error(await res.text());
 
       window.location.href = isAdmin
-        ? `/admin/events?${editingEvent ? "updated=1" : "added=1"}`
-        : `/events?${editingEvent ? "updated=1" : "added=1"}`;
+        ? `/admin/events?${isEdit ? "updated=1" : "added=1"}`
+        : `/events?${isEdit ? "updated=1" : "added=1"}`;
     } catch (err) {
       alert(err.message);
     }
@@ -173,7 +185,7 @@ export default function EventForm({
       </h2>
 
       {/* TITLE */}
-      <label className="font-medium">Title *</label>
+      <label className="font-medium">Title <span className="text-red-500">*</span></label>
       <input
         className="border p-2 w-full rounded"
         value={form.title}
@@ -182,7 +194,7 @@ export default function EventForm({
       {errors.title && <p className="text-red-500">{errors.title}</p>}
 
       {/* SHORT DESC */}
-      <label className="font-medium mt-3 block">Short Description *</label>
+      <label className="font-medium mt-3 block">Short Description <span className="text-red-500">*</span></label>
       <textarea
         className="border p-2 w-full rounded"
         rows={3}
@@ -196,7 +208,7 @@ export default function EventForm({
       )}
 
       {/* IMAGES */}
-      <label className="font-medium mt-3 block">Images *</label>
+      <label className="font-medium mt-3 block">Images <span className="text-red-500">*</span></label>
       <input
         type="file"
         multiple
@@ -241,7 +253,7 @@ export default function EventForm({
       </div>
 
       {/* DESCRIPTION */}
-      <label className="font-medium mt-4 block">Full Description *</label>
+      <label className="font-medium mt-4 block">Full Description <span className="text-red-500">*</span></label>
       <Editor
         key={editorKey}
         value={form.description}
@@ -257,7 +269,7 @@ export default function EventForm({
       {/* VENUE + BOOKING */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="font-medium">Venue *</label>
+          <label className="font-medium">Venue <span className="text-red-500">*</span></label>
           <input
             className="border p-2 w-full rounded"
             value={form.venue}
@@ -265,10 +277,13 @@ export default function EventForm({
               setForm({ ...form, venue: e.target.value })
             }
           />
+           {errors.venue && (
+        <p className="text-red-500">{errors.venue}</p>
+      )}
         </div>
 
         <div>
-          <label className="font-medium">Booking Link *</label>
+          <label className="font-medium">Booking Link <span className="text-red-500">*</span></label>
           <input
             className="border p-2 w-full rounded"
             value={form.bookingLink}
@@ -276,11 +291,16 @@ export default function EventForm({
               setForm({ ...form, bookingLink: e.target.value })
             }
           />
+              {errors.bookingLink && (
+        <p className="text-red-500">{errors.bookingLink}</p>
+      )}
         </div>
       </div>
 
       {/* DATES */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label className="font-medium">Start Date <span className="text-red-500">*</span></label>
         <Calendar
           value={form.startDate}
           onChange={(e) =>
@@ -289,7 +309,11 @@ export default function EventForm({
           showIcon
           minDate={today}
           className="w-full"
+          
         />
+        {errors.startDate && ( <p className="text-red-500">{errors.startDate}</p> )}
+      </div>
+      <div> <label className="font-medium">End Date <span className="text-red-500">*</span></label>
         <Calendar
           value={form.endDate}
           onChange={(e) =>
@@ -299,6 +323,8 @@ export default function EventForm({
           minDate={form.startDate || today}
           className="w-full"
         />
+         {errors.endDate && ( <p className="text-red-500">{errors.endDate}</p> )}
+        </div>
       </div>
 
       {/* ACTIONS */}
