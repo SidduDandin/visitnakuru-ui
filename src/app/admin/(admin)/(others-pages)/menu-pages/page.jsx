@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import MenuList from "@/components/menupages/MenuList";
 
 export default function AdminMenuPages() {
-  const { userAuthToken } = parseCookies();
+  const { authToken } = parseCookies();
   const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -17,7 +17,7 @@ export default function AdminMenuPages() {
     const loadMenus = async () => {
       try {
         const res = await fetch(`${backendUrl}/api/admin/menu-pages`, {
-          headers: { "x-auth-token": userAuthToken },
+          headers: { "x-auth-token": authToken },
         });
 
         if (res.status === 401) return router.push("/login");
@@ -31,7 +31,7 @@ export default function AdminMenuPages() {
     };
 
     loadMenus();
-  }, [backendUrl, userAuthToken, router]);
+  }, [backendUrl, authToken, router]);
 
   if (loading) {
     return (
