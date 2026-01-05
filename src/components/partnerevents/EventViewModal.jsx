@@ -46,7 +46,10 @@ export default function EventViewModal({ event, onClose }) {
                   : "Expired"
               }
             />
-            <Detail label="Venue" value={event.Venue} />
+           
+            <Detail label="Category" value={event.category?.Name || "-"} />
+             <Detail label="Venue" value={event.Venue} />
+             <Detail label="Location" value={event.location?.Name || "-"} />
             <Detail
               label="Booking Link"
               value={

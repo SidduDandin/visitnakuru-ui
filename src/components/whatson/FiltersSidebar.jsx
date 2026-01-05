@@ -1,76 +1,150 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import InlineCalendar from "./InlineCalendar";
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
 export default function FiltersSidebar({ filters, setFilters }) {
-  return (
-    <aside className="bg-white rounded-xl shadow p-6 sticky top-6">
-      {/* TITLE */}
-      {/* <h2 className="text-lg font-semibold mb-6 border-b pb-3">
-        Filter By
-      </h2> */}
+  const [locations, setLocations] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-      {/* KEYWORD */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">
+  useEffect(() => {
+    fetch(`${backendUrl}/api/events/public/filters`)
+      .then(res => res.json())
+      .then(data => {
+        setLocations(data.locations || []);
+        setCategories(data.categories || []);
+      });
+  }, []);
+
+  const toggle = (key, id) => {
+    setFilters(f => ({
+      ...f,
+      [key]: f[key].includes(id)
+        ? f[key].filter(x => x !== id)
+        : [...f[key], id],
+    }));
+  };
+
+return (
+  <aside className="bg-white rounded-xl shadow p-6 sticky top-6">
+
+    {/* KEYWORD (NO TOP BORDER) */}
+    <div className="mb-6">
+      <div className="pb-3 mb-4">
+        <span className="block font-semibold mb-0">
           Keyword
-        </label>
-        <input
-          className="w-full border border-gray-300 rounded px-3 py-2
-                     focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          placeholder="Search events"
-          value={filters.search}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, search: e.target.value }))
-          }
-        />
+        </span>
       </div>
 
-      {/* QUICK FILTERS */}
-      <div className="mb-6">
-        <p className="text-sm font-medium mb-3">Quick Filters</p>
-        <div className="grid grid-cols-2 gap-2">
-          {["day", "week", "weekend", "month", "year"].map((q) => (
-            <button
-              key={q}
-              onClick={() =>
-                setFilters((f) => ({ ...f, quick: q }))
+      <input
+        className="w-full border border-gray-300 rounded px-3 py-2
+                   focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        placeholder="Search events"
+        value={filters.search}
+        onChange={(e) =>
+          setFilters(f => ({ ...f, search: e.target.value }))
+        }
+      />
+    </div>
+
+    {/* QUICK FILTERS */}
+    <div className="mb-6">
+      <div className="-mx-6 px-6 py-3 mb-4 border-y border-gray-200">
+        <p className="font-semibold mb-0">Quick Filters</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {["day", "week", "weekend", "month", "year"].map(q => (
+          <button
+            key={q}
+            onClick={() =>
+              setFilters(f => ({ ...f, quick: q }))
+            }
+            className={`text-sm py-2 rounded border transition
+              ${
+                filters.quick === q
+                  ? "bg-yellow-500 text-white border-yellow-500"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
               }
-              className={`text-sm py-2 rounded border transition
-                ${
-                  filters.quick === q
-                    ? "bg-yellow-500 text-white border-yellow-500"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }
-              `}
-            >
-              {q.toUpperCase()}
-            </button>
-          ))}
-        </div>
+            `}
+          >
+            {q.toUpperCase()}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* DATES */}
+    <div className="mb-6">
+      <div className="-mx-6 px-6 py-3 mb-4 border-y border-gray-200">
+        <p className="font-semibold mb-0">Dates</p>
       </div>
 
-      {/* DATES */}
-      <div className="mb-6">
-        <p className="text-sm font-medium mb-3">Dates</p>
-        <InlineCalendar filters={filters} setFilters={setFilters} />
+      <InlineCalendar filters={filters} setFilters={setFilters} />
+    </div>
+
+    {/* LOCATIONS */}
+    <div className="mb-6">
+      <div className="-mx-6 px-6 py-3 mb-4 border-y border-gray-200">
+        <p className="font-semibold mb-0">Locations</p>
       </div>
 
-      {/* LOCATION */}
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Location
+      {locations.map(loc => (
+        <label
+          key={loc.LocationID}
+          className="flex items-center gap-2 mb-2"
+        >
+          <input
+            type="checkbox"
+            checked={filters.locationIds.includes(loc.LocationID)}
+            onChange={(e) => {
+              setFilters(f => ({
+                ...f,
+                locationIds: e.target.checked
+                  ? [...f.locationIds, loc.LocationID]
+                  : f.locationIds.filter(id => id !== loc.LocationID),
+              }));
+            }}
+          />
+          <span>
+            {loc.Name} ({loc._count.events})
+          </span>
         </label>
-        <input
-          className="w-full border border-gray-300 rounded px-3 py-2
-                     focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          placeholder="Venue / City"
-          value={filters.location}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, location: e.target.value }))
-          }
-        />
+      ))}
+    </div>
+
+    {/* CATEGORIES */}
+    <div>
+      <div className="-mx-6 px-6 py-3 mb-4 border-y border-gray-200">
+        <p className="font-semibold mb-0">Categories</p>
       </div>
-    </aside>
-  );
+
+      {categories.map(c => (
+        <label
+          key={c.CategoryID}
+          className="flex items-center gap-2 mb-2"
+        >
+          <input
+            type="checkbox"
+            checked={filters.categoryIds.includes(c.CategoryID)}
+            onChange={(e) => {
+              setFilters(f => ({
+                ...f,
+                categoryIds: e.target.checked
+                  ? [...f.categoryIds, c.CategoryID]
+                  : f.categoryIds.filter(id => id !== c.CategoryID),
+              }));
+            }}
+          />
+          <span>
+            {c.Name} ({c._count.events})
+          </span>
+        </label>
+      ))}
+    </div>
+
+  </aside>
+);
 }

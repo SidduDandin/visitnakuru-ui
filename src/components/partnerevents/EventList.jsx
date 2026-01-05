@@ -95,6 +95,7 @@ useEffect(() => {
           loading={loading}
           onEdit={onEdit}
           onDelete={onDelete}
+          onAdd={onAdd}
         />
       </div>
     </div>

@@ -44,12 +44,22 @@ export default function EventViewModal({ data, onClose, backendUrl }) {
                   : "Expired"
               }
             />
-            <InfoRow label="Venue" value={data.Venue || "-"} />
+        
+         <InfoRow
+  label="Category"
+  value={data.category?.Name || "-"}
+/>
+ <InfoRow label="Venue" value={data.Venue || "-"} />
+<InfoRow
+  label="Location"
+  value={data.location?.Name || "-"}
+/>
+           
             <InfoRow label="Booking Link" value={data.BookingLink || "-"} />
             <InfoRow
               label="Date"
-              value={`${formatDate(data.StartDate)}${
-                data.EndDate ? ` - ${formatDate(data.EndDate)}` : ""
+              value={`${formatEventRange(data.StartDate)}${
+                data.EndDate ? ` - ${formatEventRange(data.EndDate)}` : ""
               }`}
             />
             <InfoRow
@@ -124,7 +134,25 @@ function InfoRow({ label, value }) {
   );
 }
 
-function formatDate(date) {
-  if (!date) return "--";
-  return new Date(date).toLocaleDateString();
+function formatEventRange(date) {
+  if (!date) return "";
+
+  const startDate = new Date(date);
+  const endDate = date ? new Date(date) : null;
+
+  const format = (date) =>
+    date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+      timeZone: "UTC",
+    });
+
+  // If range and dates differ
+  if (endDate && startDate.toDateString() !== endDate.toDateString()) {
+    return `${format(startDate)} - ${format(endDate)}`;
+  }
+
+  // Single-day event
+  return format(startDate);
 }

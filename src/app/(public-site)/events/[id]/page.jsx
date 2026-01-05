@@ -5,20 +5,23 @@ import { parseCookies } from "nookies";
 import { useParams, useRouter } from "next/navigation";
 import EventForm from "@/components/events/EventForm";
 
-export default function EditEventPage() {
+export default function EventPage() {
   const params = useParams();
-  const id = params?.id;
+  const router = useRouter();
 
   const { userAuthToken } = parseCookies();
-  const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+  const id = params?.id;
+  const isEdit = id && id !== "new";
+
   const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState("");
 
+  /* ================= FETCH EVENT (EDIT ONLY) ================= */
   useEffect(() => {
-    if (!id) return; // ⛔ prevent undefined fetch
+    if (!isEdit) return;
 
     const loadEvent = async () => {
       try {
@@ -39,22 +42,19 @@ export default function EditEventPage() {
         }
 
         if (!res.ok) {
-           router.push("/login");
-          return;
+          throw new Error("Failed to load event");
         }
 
         const data = await res.json();
-
-        // ✅ support both response shapes
         const eventData = data.event || data;
 
-        if (!eventData) {
+        if (!eventData?.EventID) {
           throw new Error("Invalid event data");
         }
 
         setEvent(eventData);
       } catch (err) {
-        console.error("Edit event load error:", err);
+        console.error("Load event error:", err);
         setError(err.message || "Failed to load event");
       } finally {
         setLoading(false);
@@ -62,9 +62,9 @@ export default function EditEventPage() {
     };
 
     loadEvent();
-  }, [id, backendUrl, userAuthToken, router]);
+  }, [isEdit, id, backendUrl, userAuthToken, router]);
 
-  // ================= UI STATES =================
+  /* ================= UI STATES ================= */
 
   if (loading) {
     return (
@@ -88,15 +88,14 @@ export default function EditEventPage() {
     );
   }
 
-  if (!event) return null;
+  /* ================= FORM ================= */
 
-  // ================= FORM =================
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-10 px-6">
       <EventForm
         backendUrl={backendUrl}
         authToken={userAuthToken}
-        editingEvent={event}
+        editingEvent={isEdit ? event : null}   // 🔥 KEY FIX
         onCancel={() => router.push("/events")}
         mode="partner"
         handleAuthError={() => router.push("/login")}

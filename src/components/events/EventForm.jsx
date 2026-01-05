@@ -18,56 +18,85 @@ export default function EventForm({
   const [saving, setSaving] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [editorKey, setEditorKey] = useState("editor-new");
+  
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   /* FORM */
   const [form, setForm] = useState({
-    title: "",
-    shortDesc: "",
-    description: "",
-    venue: "",
-    bookingLink: "",
-    startDate: null,
-    endDate: null,
-  });
+  title: "",
+  shortDesc: "",
+  description: "",
+  venue: "",
+  bookingLink: "",
+  startDate: null,
+  endDate: null,
+  categoryId: "",
+  locationId: "",
+});
+
 
   /* IMAGE STATE */
   const [existingImages, setExistingImages] = useState([]);
   const [removedImageIds, setRemovedImageIds] = useState([]);
   const [newImages, setNewImages] = useState([]);
-
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [errors, setErrors] = useState({});
 
-  /* ================= LOAD EDIT MODE ================= */
+
   useEffect(() => {
-    if (!editingEvent) {
-      setEditorLoaded(true);
-      return;
-    }
+  fetch(`${backendUrl}/api/events/admin/event-categories`, {
+  headers: { "x-auth-token": authToken },
+})
+  .then(res => res.json())
+  .then(setCategories);
 
-    setForm({
-      title: editingEvent.Title || "",
-      shortDesc: editingEvent.ShortDesc || "",
-      description: editingEvent.Description || "",
-      venue: editingEvent.Venue || "",
-      bookingLink: editingEvent.BookingLink || "",
-      startDate: editingEvent.StartDate
-        ? new Date(editingEvent.StartDate)
-        : null,
-      endDate: editingEvent.EndDate
-        ? new Date(editingEvent.EndDate)
-        : null,
-    });
 
-    setExistingImages(editingEvent.images || []);
-    setRemovedImageIds([]);
-    setNewImages([]);
+  fetch(`${backendUrl}/api/admin/locations`, {
+    headers: { "x-auth-token": authToken },
+  })
+    .then(res => res.json())
+    .then(setLocations);
+}, []);
 
-    setEditorKey(`editor-${editingEvent.EventID}`);
+
+  /* ================= LOAD EDIT MODE ================= */
+useEffect(() => {
+  if (!editingEvent) {
     setEditorLoaded(true);
-  }, [editingEvent]);
+    return;
+  }
+
+  setForm({
+    title: editingEvent.Title || "",
+    shortDesc: editingEvent.ShortDesc || "",
+    description: editingEvent.Description || "",
+    venue: editingEvent.Venue || "",
+    bookingLink: editingEvent.BookingLink || "",
+
+    // ✅ IMPORTANT
+    startDate: editingEvent.StartDate
+      ? new Date(editingEvent.StartDate)
+      : null,
+
+    endDate: editingEvent.EndDate
+      ? new Date(editingEvent.EndDate)
+      : null,
+
+    categoryId: editingEvent.CategoryID || "",
+    locationId: editingEvent.LocationID || "",
+  });
+
+  setExistingImages(editingEvent.images || []);
+  setRemovedImageIds([]);
+  setNewImages([]);
+
+  setEditorKey(`editor-${editingEvent.EventID}`);
+  setEditorLoaded(true);
+}, [editingEvent]);
+
 
   /* ================= VALIDATION ================= */
   const validate = () => {
@@ -75,6 +104,10 @@ export default function EventForm({
 
     if (!form.title.trim()) e.title = "Title is required";
     if (!form.shortDesc.trim()) e.shortDesc = "Short description is required";
+
+    if (!form.categoryId) e.categoryId = "Category is required";
+    if (!form.locationId) e.locationId = "Location is required";
+
 
     const plain = form.description.replace(/<[^>]*>/g, "").trim();
     if (!plain) e.description = "Full description is required";
@@ -114,6 +147,12 @@ export default function EventForm({
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+
+  const formatDateOnly = (date) =>
+  date
+    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+    : "";
+
   /* ================= SAVE ================= */
   const handleSave = async () => {
     const v = validate();
@@ -128,10 +167,11 @@ export default function EventForm({
       fd.append("ShortDesc", form.shortDesc);
       fd.append("Description", form.description);
       fd.append("Venue", form.venue);
-      fd.append("BookingLink", form.bookingLink);
-      fd.append("StartDate", form.startDate.toISOString());
-      fd.append("EndDate", form.endDate.toISOString());
-
+      fd.append("BookingLink", form.bookingLink); 
+      fd.append("StartDate", formatDateOnly(form.startDate));
+      fd.append("EndDate", formatDateOnly(form.endDate));
+      fd.append("CategoryID", form.categoryId);
+      fd.append("LocationID", form.locationId);
       if (isAdmin) fd.append("IsSignature", "true");
 
       /* 🔥 IMPORTANT: correct array key */
@@ -265,7 +305,55 @@ export default function EventForm({
       {errors.description && (
         <p className="text-red-500">{errors.description}</p>
       )}
-
+<div className="grid md:grid-cols-2 gap-4 mt-4">
+ <div>
+    {/* CATEGORY */}
+<label className="font-medium mt-3 block">
+  Category <span className="text-red-500">*</span>
+</label>
+<select
+  className="border p-2 w-full rounded"
+  value={form.categoryId}
+  onChange={(e) =>
+    setForm({ ...form, categoryId: e.target.value })
+  }
+>
+  <option value="">-- Select Category --</option>
+  {categories.map((c) => (
+    <option key={c.CategoryID} value={c.CategoryID}>
+      {c.Name}
+    </option>
+  ))}
+</select>
+{errors.categoryId && (
+  <p className="text-red-500">{errors.categoryId}</p>
+)}
+ </div>
+ <div>
+{/* LOCATION */}
+<label className="font-medium mt-3 block">
+  Location <span className="text-red-500">*</span>
+</label>
+<select
+  className="border p-2 w-full rounded"
+  value={form.locationId}
+  onChange={(e) =>
+    setForm({ ...form, locationId: e.target.value })
+  }
+>
+  <option value="">-- Select Location --</option>
+  {locations.map((l) => (
+    <option key={l.LocationID} value={l.LocationID}>
+      {l.Name}
+    </option>
+  ))}
+</select>
+{errors.locationId && (
+  <p className="text-red-500">{errors.locationId}</p>
+)}
+ </div>
+</div>
+    
       {/* VENUE + BOOKING */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <div>
@@ -304,11 +392,14 @@ export default function EventForm({
         <Calendar
           value={form.startDate}
           onChange={(e) =>
-            setForm({ ...form, startDate: e.value })
-          }
+  setForm({
+    ...form,
+    startDate: e.value,
+  })
+}
           showIcon
           minDate={today}
-          className="w-full"
+  className="w-full"
           
         />
         {errors.startDate && ( <p className="text-red-500">{errors.startDate}</p> )}
@@ -317,11 +408,14 @@ export default function EventForm({
         <Calendar
           value={form.endDate}
           onChange={(e) =>
-            setForm({ ...form, endDate: e.value })
-          }
-          showIcon
-          minDate={form.startDate || today}
-          className="w-full"
+  setForm({
+    ...form,
+    endDate: e.value,
+  })
+}
+
+        showIcon  
+  className="w-full"
         />
          {errors.endDate && ( <p className="text-red-500">{errors.endDate}</p> )}
         </div>

@@ -76,6 +76,25 @@ const navItems = [
 
   {
     icon:  <ListIcon />,
+    name: "Manage Menu Pages",
+    path: "/admin/menu-pages",
+  },
+
+   {
+    icon:  <ListIcon />,
+    name: "Manage Menu Categories",
+    path: "/admin/menu-categories",
+  },
+
+  {
+    icon:  <ListIcon />,
+    name: "Manage Locations",
+    path: "/admin/locations",
+  },
+
+
+  {
+    icon:  <ListIcon />,
     name: "Manage Events",
     path: "/admin/events",
   },
