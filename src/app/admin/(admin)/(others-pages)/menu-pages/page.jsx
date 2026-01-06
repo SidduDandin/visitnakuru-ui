@@ -20,11 +20,18 @@ export default function AdminMenuPages() {
           headers: { "x-auth-token": authToken },
         });
 
-        if (res.status === 401) return router.push("/login");
+        if (res.status === 401) {
+          router.push("/login");
+          return;
+        }
+
         const data = await res.json();
-        setMenus(data);
+
+        // ✅ PRODUCTION-SAFE
+        setMenus(Array.isArray(data) ? data : data?.data ?? []);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load menu pages:", err);
+        setMenus([]);
       } finally {
         setLoading(false);
       }
