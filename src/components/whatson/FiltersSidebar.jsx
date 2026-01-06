@@ -108,7 +108,7 @@ return (
               }));
             }}
           />
-          <span>
+          <span className="text-sm">
             {loc.Name} ({loc._count.events})
           </span>
         </label>
@@ -122,26 +122,33 @@ return (
       </div>
 
       {categories.map(c => (
-        <label
-          key={c.CategoryID}
-          className="flex items-center gap-2 mb-2"
-        >
-          <input
-            type="checkbox"
-            checked={filters.categoryIds.includes(c.CategoryID)}
-            onChange={(e) => {
-              setFilters(f => ({
-                ...f,
-                categoryIds: e.target.checked
-                  ? [...f.categoryIds, c.CategoryID]
-                  : f.categoryIds.filter(id => id !== c.CategoryID),
-              }));
-            }}
-          />
-          <span>
-            {c.Name} ({c._count.events})
-          </span>
-        </label>
+      <label
+  key={c.CategoryID}
+  className="flex items-center justify-between gap-2 py-1 cursor-pointer"
+>
+  <div className="flex items-center gap-2 min-w-0">
+    <input
+      type="checkbox"
+      checked={filters.categoryIds.includes(c.CategoryID)}
+      onChange={(e) => {
+        setFilters((f) => ({
+          ...f,
+          categoryIds: e.target.checked
+            ? [...f.categoryIds, c.CategoryID]
+            : f.categoryIds.filter((id) => id !== c.CategoryID),
+        }));
+      }}
+    />
+
+    <span className="text-sm whitespace-nowrap">
+      {c.Name}
+    </span>
+  </div>
+
+  <span className="text-sm whitespace-nowrap">
+    ({c._count.events})
+  </span>
+</label>
       ))}
     </div>
 
