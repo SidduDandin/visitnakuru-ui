@@ -126,7 +126,7 @@ return (
   key={c.CategoryID}
   className="flex items-center justify-between gap-2 py-1 cursor-pointer"
 >
-  <div className="flex items-center gap-2 min-w-0">
+  <div className="flex items-center gap-2">
     <input
       type="checkbox"
       checked={filters.categoryIds.includes(c.CategoryID)}
