@@ -12,10 +12,10 @@ const currentYear = new Date().getFullYear();
               {/* Footer Nav Links (now translated) */}
               <ul className="flex flex-wrap justify-center font-interstate md:text-[18px] text-[16px] font-normal ">
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
-                  <Link href="#" className="text-white hover:underline">{t('footer.whatsOn')}</Link>
+                  <Link href="/whats-on" className="text-white hover:underline">{t('footer.whatsOn')}</Link>
                 </li>
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
-                  <Link href="/whats-on" className="text-white hover:underline">{t('footer.thingsToDo')}</Link>
+                  <Link href="#" className="text-white hover:underline">{t('footer.thingsToDo')}</Link>
                 </li>
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
                   <Link href="#" className="text-white hover:underline">{t('footer.foodDrink')}</Link>
