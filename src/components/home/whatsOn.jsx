@@ -92,7 +92,7 @@ export default async function WhatsOn() {
                     </div>
 
                     <Link
-                      href={`/events/${event.Slug}`}
+                      href={`/event/${event.Slug}`}
                       className="text-primary"
                     >
                       Read More

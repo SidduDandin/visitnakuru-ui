@@ -1,89 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-export default function EventImageSlider({ images = [], title }) {
-  if (!images.length) return null;
+export default function EventImageSlider({ images = [] }) {
+  const validImages = Array.isArray(images) ? images : [];
+  const [active, setActive] = useState(0);
 
-  const sortedImages = [...images].sort(
-    (a, b) => (b.IsCover ? 1 : 0) - (a.IsCover ? 1 : 0)
-  );
+  if (!validImages.length) return null;
 
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const activeImage = sortedImages[activeIndex];
-
-  function prev() {
-    setActiveIndex((i) => (i === 0 ? sortedImages.length - 1 : i - 1));
-  }
-
-  function next() {
-    setActiveIndex((i) => (i === sortedImages.length - 1 ? 0 : i + 1));
-  }
+  const prev = () =>
+    setActive((i) => (i === 0 ? validImages.length - 1 : i - 1));
+  const next = () =>
+    setActive((i) => (i === validImages.length - 1 ? 0 : i + 1));
 
   return (
-    <div className="bg-black">
+    <div className="w-full">
 
       {/* MAIN IMAGE */}
-      <div className="relative max-w-7xl mx-auto">
-        <div className="relative w-full h-[520px] overflow-hidden rounded-b-[40px]">
-          <Image
-            src={`${backendUrl}/images/events/${activeImage.FilePath}`}
-            alt={title}
-            fill
-            priority
-            className="object-cover"
-          />
+      <div className="relative w-full overflow-hidden rounded-b-[28px] bg-white">
 
-          {/* ARROWS */}
-          {sortedImages.length > 1 && (
-            <>
-              <button
-                onClick={prev}
-                className="absolute left-4 bottom-6 bg-white/90 hover:bg-white p-3 rounded-full shadow"
-              >
-                ←
-              </button>
+        <img
+          src={`${backendUrl}/images/events/${validImages[active].FilePath}`}
+          alt=""
+          className="w-full h-[520px] object-cover"
+          loading="eager"
+        />
 
-              <button
-                onClick={next}
-                className="absolute right-4 bottom-6 bg-white/90 hover:bg-white p-3 rounded-full shadow"
-              >
-                →
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* THUMBNAILS */}
-        {sortedImages.length > 1 && (
-          <div className="flex gap-3 mt-4 px-4 overflow-x-auto">
-            {sortedImages.map((img, index) => (
-              <button
-                key={img.ImageID || index}
-                onClick={() => setActiveIndex(index)}
-                className={`relative w-24 h-16 rounded overflow-hidden border-2 transition
-                  ${
-                    index === activeIndex
-                      ? "border-yellow-500"
-                      : "border-transparent opacity-70 hover:opacity-100"
-                  }
-                `}
-              >
-                <Image
-                  src={`${backendUrl}/images/events/${img.FilePath}`}
-                  alt=""
-                  fill
-                  className="object-cover"
-                />
-              </button>
-            ))}
+        {/* ARROWS — CENTERED BOTTOM */}
+        {validImages.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/90 backdrop-blur rounded-full px-3 py-2 shadow">
+            <button
+              onClick={prev}
+              className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-100"
+            >
+              ←
+            </button>
+            <button
+              onClick={next}
+              className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-100"
+            >
+              →
+            </button>
           </div>
         )}
       </div>
+
+      {/* THUMBNAILS — OUTSIDE IMAGE */}
+      {validImages.length > 1 && (
+        <div className="mt-3 flex gap-2">
+          {validImages.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              className={`border rounded-md overflow-hidden transition
+                ${
+                  i === active
+                    ? "border-gray-900"
+                    : "border-gray-200 opacity-70 hover:opacity-100"
+                }
+              `}
+            >
+              <img
+                src={`${backendUrl}/images/events/${img.FilePath}`}
+                alt=""
+                className="w-20 h-14 object-cover"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

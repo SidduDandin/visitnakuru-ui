@@ -15,7 +15,7 @@ const currentYear = new Date().getFullYear();
                   <Link href="#" className="text-white hover:underline">{t('footer.whatsOn')}</Link>
                 </li>
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
-                  <Link href="#" className="text-white hover:underline">{t('footer.thingsToDo')}</Link>
+                  <Link href="/whats-on" className="text-white hover:underline">{t('footer.thingsToDo')}</Link>
                 </li>
                 <li className="after:content-['|'] after:mx-2 last:after:content-none">
                   <Link href="#" className="text-white hover:underline">{t('footer.foodDrink')}</Link>
